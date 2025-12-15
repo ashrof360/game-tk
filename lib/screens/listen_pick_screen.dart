@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../providers/game_provider.dart';
 
 class ListenPickScreen extends StatefulWidget {
@@ -12,11 +13,43 @@ class ListenPickScreen extends StatefulWidget {
 
 class _ListenPickScreenState extends State<ListenPickScreen> {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final FlutterTts _tts = FlutterTts();
   int currentItemIndex = 0;
+
+  Future<void> _playPrompt(String assetPath, String fallbackText) async {
+    // 1) Try playing a bundled asset audio file.
+    try {
+      await _audioPlayer.play(AssetSource(assetPath));
+      return;
+    } catch (_) {
+      // ignore and try alternative path / fallback
+    }
+
+    // 2) Some setups use paths without the leading "assets/".
+    if (assetPath.startsWith('assets/')) {
+      try {
+        await _audioPlayer.play(
+          AssetSource(assetPath.substring('assets/'.length)),
+        );
+        return;
+      } catch (_) {
+        // ignore and fallback to TTS
+      }
+    }
+
+    // 3) Fallback: speak the word using Text-to-Speech (works even if no audio assets exist).
+    try {
+      await _tts.stop();
+      await _tts.speak(fallbackText);
+    } catch (_) {
+      // ignore
+    }
+  }
 
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _tts.stop();
     super.dispose();
   }
 
@@ -57,8 +90,7 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                   children: [
                     ElevatedButton(
                       onPressed: () async {
-                        // Play audio
-                        await _audioPlayer.play(AssetSource(correctItem.audio));
+                        await _playPrompt(correctItem.audio, correctItem.name);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,

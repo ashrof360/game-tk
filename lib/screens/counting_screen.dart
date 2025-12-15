@@ -23,6 +23,10 @@ class _CountingScreenState extends State<CountingScreen> {
     }
 
     final item = category.items[currentItemIndex];
+    final itemLabel = item.name.toLowerCase();
+    final itemLabelPlural = itemLabel.endsWith('s')
+        ? itemLabel
+        : '${itemLabel}s';
 
     return Scaffold(
       appBar: AppBar(
@@ -45,7 +49,7 @@ class _CountingScreenState extends State<CountingScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'How many ${item.name.toLowerCase()}s?',
+                      'How many $itemLabelPlural?',
                       style: const TextStyle(fontSize: 24, color: Colors.white),
                     ),
                     const SizedBox(height: 20),
@@ -54,11 +58,34 @@ class _CountingScreenState extends State<CountingScreen> {
                       children: List.generate(
                         itemCount,
                         (index) => Container(
-                          width: 60,
-                          height: 60,
-                          margin: const EdgeInsets.all(5),
-                          color: Colors.white,
-                          child: const Center(child: Text('Item')),
+                          width: 70,
+                          height: 70,
+                          margin: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 10,
+                                offset: Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(10),
+                          child: Image.asset(
+                            item.image,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  size: 32,
+                                  color: Colors.grey,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
