@@ -110,7 +110,7 @@ final List<Category> categories = [
     ],
   ),
   Category(
-    name: 'Cat',
+    name: 'Animals',
     // Using the icon file that exists in assets/icons/
     icon: 'assets/icons/cat (1).png',
     items: [

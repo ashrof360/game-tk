@@ -54,15 +54,22 @@ class CategorySelectionScreen extends StatelessWidget {
                     Container(
                       width: 80,
                       height: 80,
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color:
                             Colors.primaries[index % Colors.primaries.length],
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.category,
-                        size: 40,
-                        color: Colors.white,
+                      child: Image.asset(
+                        category.icon,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.category,
+                            size: 40,
+                            color: Colors.white,
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 10),

@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => GameProvider())],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'English Learning Game',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
