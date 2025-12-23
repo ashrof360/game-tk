@@ -42,60 +42,111 @@ class GameSelectionScreen extends StatelessWidget {
     ];
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('${category.name} Games'),
-        backgroundColor: Colors.green,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.lightGreen, Colors.yellow],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+        title: Text(
+          '${category.name} Games',
+          style: const TextStyle(
+            color: Color(0xFF2E5A27), // Deep green color for text
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
           ),
         ),
-        child: ListView.builder(
-          padding: const EdgeInsets.all(20),
-          itemCount: games.length,
-          itemBuilder: (context, index) {
-            final game = games[index];
-            final isCompleted = provider.isGameCompleted(
-              category.name,
-              game['type'] as GameType,
-            );
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF2E5A27)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/category_bg.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            itemCount: games.length,
+            itemBuilder: (context, index) {
+              final game = games[index];
+              final isCompleted = provider.isGameCompleted(
+                category.name,
+                game['type'] as GameType,
+              );
 
-            return Card(
-              elevation: 8,
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: ListTile(
-                leading: Icon(
-                  isCompleted ? Icons.check_circle : Icons.play_circle_fill,
-                  color: isCompleted ? Colors.green : Colors.blue,
-                  size: 40,
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                title: Text(
-                  game['name'] as String,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(24),
+                    onTap: () {
+                      provider.selectGameType(game['type'] as GameType);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => game['screen'] as Widget,
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF42A5F5), // Blue play button color
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isCompleted ? Icons.check : Icons.play_arrow,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              game['name'] as String,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF333333),
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            color: Color(0xFF333333),
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios),
-                onTap: () {
-                  provider.selectGameType(game['type'] as GameType);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => game['screen'] as Widget,
-                    ),
-                  );
-                },
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

@@ -9,10 +9,9 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.yellow, Colors.orange, Colors.pink],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+          image: DecorationImage(
+            image: AssetImage('assets/images/image.png'),
+            fit: BoxFit.cover,
           ),
         ),
         child: Center(
