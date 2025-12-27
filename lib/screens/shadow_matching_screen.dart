@@ -75,16 +75,30 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
     final item = category.items[currentItemIndex];
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Shadow Matching'),
-        backgroundColor: Colors.purple,
+        title: const Text(
+          'Shadow Matching',
+          style: TextStyle(
+            color: Color(0xFF2E5A27),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF2E5A27)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.purple, Colors.pink],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+          image: DecorationImage(
+            image: AssetImage('assets/images/game_bg.jpg'),
+            fit: BoxFit.cover,
           ),
         ),
         child: Column(

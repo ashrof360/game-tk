@@ -43,23 +43,6 @@ class GameSelectionScreen extends StatelessWidget {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          '${category.name} Games',
-          style: const TextStyle(
-            color: Color(0xFF2E5A27), // Deep green color for text
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF2E5A27)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -70,85 +53,184 @@ class GameSelectionScreen extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            itemCount: games.length,
-            itemBuilder: (context, index) {
-              final game = games[index];
-              final isCompleted = provider.isGameCompleted(
-                category.name,
-                game['type'] as GameType,
-              );
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(24),
-                    onTap: () {
-                      provider.selectGameType(game['type'] as GameType);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => game['screen'] as Widget,
+          child: Column(
+            children: [
+              // Custom Wood-style Title Banner (Code-based)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF8D6E63), Color(0xFF5D4037)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                         ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF42A5F5), // Blue play button color
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              isCompleted ? Icons.check : Icons.play_arrow,
-                              color: Colors.white,
-                              size: 32,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              game['name'] as String,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF333333),
-                              ),
-                            ),
-                          ),
-                          const Icon(
-                            Icons.arrow_forward_ios,
-                            color: Color(0xFF333333),
-                            size: 20,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF3E2723), width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            offset: const Offset(0, 5),
+                            blurRadius: 10,
                           ),
                         ],
                       ),
+                      child: Text(
+                        '${category.name} Games',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 26,
+                          letterSpacing: 1.2,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black45,
+                              offset: Offset(2, 2),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                    // Decorative Leaf (simulated)
+                    Positioned(
+                      left: -15,
+                      top: -10,
+                      child: Icon(Icons.eco, color: Colors.green.shade700, size: 40),
+                    ),
+                    Positioned(
+                      right: -15,
+                      bottom: -10,
+                      child: Icon(Icons.eco, color: Colors.green.shade900, size: 40),
+                    ),
+                    // Back Button
+                    Positioned(
+                      left: -30,
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF5D4037),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                            ],
+                          ),
+                          child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              );
-            },
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  itemCount: games.length,
+                  itemBuilder: (context, index) {
+                    final game = games[index];
+                    final isCompleted = provider.isGameCompleted(
+                      category.name,
+                      game['type'] as GameType,
+                    );
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            provider.selectGameType(game['type'] as GameType);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => game['screen'] as Widget,
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(25),
+                          child: Container(
+                            height: 85,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFFF3E0), Color(0xFFFFCC80)],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(color: const Color(0xFF8D6E63), width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.15),
+                                  offset: const Offset(0, 4),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                children: [
+                                  // Left Icon (Circular Play)
+                                  Container(
+                                    width: 55,
+                                    height: 55,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: const RadialGradient(
+                                        colors: [Color(0xFF64B5F6), Color(0xFF1976D2)],
+                                      ),
+                                      border: Border.all(color: Colors.white, width: 2),
+                                      boxShadow: const [
+                                        BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      isCompleted ? Icons.check_circle : Icons.play_arrow_rounded,
+                                      color: Colors.white,
+                                      size: 35,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 15),
+                                  // Game Name
+                                  Expanded(
+                                    child: Text(
+                                      game['name'] as String,
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                        color: Color(0xFF4E342E),
+                                      ),
+                                    ),
+                                  ),
+                                  // Right Arrow
+                                  const Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    color: Color(0xFF8D6E63),
+                                    size: 24,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 }
+
+
