@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../models/category.dart';
+import '../widgets/game_components.dart';
 
 class ShadowMatchingScreen extends StatefulWidget {
   const ShadowMatchingScreen({super.key});
@@ -14,7 +15,6 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
   int currentItemIndex = 0;
   List<GameItem> shadowOptions = [];
   bool isCorrect = false;
-  bool showDraggable = true;
 
   @override
   void didChangeDependencies() {
@@ -29,14 +29,17 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
     final category = provider.selectedCategory;
     if (category != null && category.items.isNotEmpty) {
       final currentItem = category.items[currentItemIndex];
-      shadowOptions = [currentItem];
-      // Add 3 random other items
+      List<GameItem> options = [currentItem];
+      
       final otherItems = category.items
           .where((item) => item != currentItem)
           .toList();
       otherItems.shuffle();
-      shadowOptions.addAll(otherItems.take(3));
-      shadowOptions.shuffle(); // Shuffle the order
+      options.addAll(otherItems.take(5)); // Take more to fill a 2x3 grid if possible
+      options.shuffle();
+      setState(() {
+        shadowOptions = options;
+      });
     }
   }
 
@@ -45,7 +48,6 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
     provider.incrementScore();
     setState(() {
       isCorrect = true;
-      showDraggable = false;
     });
     Future.delayed(const Duration(seconds: 1), () {
       final category = provider.selectedCategory!;
@@ -53,7 +55,6 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
         setState(() {
           currentItemIndex++;
           isCorrect = false;
-          showDraggable = true;
         });
         _prepareRound();
       } else {
@@ -72,116 +73,127 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
       return const Scaffold(body: Center(child: Text('No items')));
     }
 
-    final item = category.items[currentItemIndex];
+    final currentTarget = category.items[currentItemIndex];
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text(
-          'Shadow Matching',
-          style: TextStyle(
-            color: Color(0xFF2E5A27),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF2E5A27)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/game_bg.jpg'),
+            image: AssetImage('assets/images/home_new_bg.jpg'),
             fit: BoxFit.cover,
           ),
         ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (showDraggable)
-                      Draggable<GameItem>(
-                        data: item,
-                        feedback: Image.asset(
-                          item.image,
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                        ),
-                        childWhenDragging: Container(
-                          width: 100,
-                          height: 100,
-                          color: Colors.grey.withOpacity(0.5),
-                        ),
-                        child: Image.asset(
-                          item.image,
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Drag the image to match the shadow!',
-                      style: TextStyle(fontSize: 24, color: Colors.white),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 30),
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: WoodenSign(title: 'Shadow Matching'),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 48), // Spacer for centering
+                ],
               ),
-            ),
-            Container(
-              height: 200,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: shadowOptions.map((shadowItem) {
-                  return DragTarget<GameItem>(
-                    onAccept: (draggedItem) {
-                      if (draggedItem == shadowItem) {
-                        _onCorrectMatch();
-                      }
-                    },
-                    builder: (context, candidateData, rejectedData) {
-                      return Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white, width: 2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: ColorFiltered(
-                          colorFilter: const ColorFilter.mode(
-                            Colors.black,
-                            BlendMode.srcIn,
-                          ),
-                          child: Image.asset(
-                            shadowItem.image,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+              const SizedBox(height: 40),
+              
+              // Game Panel with Shadows
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GamePanel(
+                  height: 350,
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(10),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                    ),
+                    itemCount: shadowOptions.length,
+                    itemBuilder: (context, index) {
+                      final item = shadowOptions[index];
+                      return DragTarget<GameItem>(
+                        onAccept: (draggedItem) {
+                          if (draggedItem == item) {
+                            _onCorrectMatch();
+                          }
+                        },
+                        builder: (context, candidateData, rejectedData) {
+                          bool isMatched = isCorrect && item == currentTarget;
+                          
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white24,
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: isMatched ? Colors.green : Colors.brown.withOpacity(0.5),
+                                width: 3,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: ColorFiltered(
+                                colorFilter: ColorFilter.mode(
+                                  isMatched ? Colors.transparent : Colors.black54,
+                                  isMatched ? BlendMode.dst : BlendMode.srcIn,
+                                ),
+                                child: Image.asset(item.image, fit: BoxFit.contain),
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                }).toList(),
-              ),
-            ),
-            if (isCorrect)
-              const Padding(
-                padding: EdgeInsets.all(20),
-                child: Text(
-                  'Correct! Well done!',
-                  style: TextStyle(fontSize: 20, color: Colors.green),
+                  ),
                 ),
               ),
-          ],
+              
+              const Spacer(),
+              
+              // Bottom area with the item to match
+              if (!isCorrect)
+                Draggable<GameItem>(
+                  data: currentTarget,
+                  feedback: Material(
+                    color: Colors.transparent,
+                    child: Image.asset(currentTarget.image, width: 120, height: 120),
+                  ),
+                  childWhenDragging: Opacity(
+                    opacity: 0.3,
+                    child: Image.asset(currentTarget.image, width: 100, height: 100),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Image.asset(currentTarget.image, width: 100, height: 100),
+                  ),
+                ),
+                
+              const SizedBox(height: 20),
+              const Text(
+                'Match the item to its shadow!',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );

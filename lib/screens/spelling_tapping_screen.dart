@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
+import '../widgets/game_components.dart';
 
 class SpellingTappingScreen extends StatefulWidget {
   const SpellingTappingScreen({super.key});
@@ -28,115 +29,163 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text(
-          'Spelling & Tapping',
-          style: TextStyle(
-            color: Color(0xFF2E5A27),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF2E5A27)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/game_bg.jpg'),
+            image: AssetImage('assets/images/home_new_bg.jpg'),
             fit: BoxFit.cover,
           ),
         ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10,
-                            offset: Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      child: Image.asset(
-                        item.image,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          // Fallback so the game doesn't crash if an asset path is wrong.
-                          return const Center(
-                            child: Icon(
-                              Icons.image_not_supported,
-                              size: 48,
-                              color: Colors.grey,
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 30),
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: WoodenSign(title: 'Spelling & Tapping'),
+                    ),
+                  ),
+                  const SizedBox(width: 48),
+                ],
+              ),
+              const SizedBox(height: 20),
+              
+              // Item on "Stump"
+              Expanded(
+                child: Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Simulated Tree Stump
+                      Positioned(
+                        bottom: 0,
+                        child: Container(
+                          width: 180,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF8B4513), Color(0xFF5D2E0A)],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                             ),
-                          );
-                        },
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(50)),
+                            border: Border.all(color: const Color(0xFF3E2723), width: 2),
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      currentSpelling,
-                      style: const TextStyle(fontSize: 32, color: Colors.white),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 30),
+                        child: Image.asset(
+                          item.image,
+                          width: 140,
+                          height: 140,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      // Mascot Owl
+                      const Positioned(
+                        right: -100,
+                        top: 0,
+                        child: MascotAnchor(icon: Icons.face_retouching_natural, color: Colors.brown),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Container(
-              height: 200,
-              child: GridView.builder(
-                padding: const EdgeInsets.all(20),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
+              
+              const SizedBox(height: 20),
+              
+              // Word Slots
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                itemCount: letters.length,
-                itemBuilder: (context, index) {
-                  final letter = letters[index];
-                  return ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        currentSpelling += letter;
-                      });
-                      if (currentSpelling == word) {
-                        provider.incrementScore();
-                        Future.delayed(const Duration(seconds: 1), () {
-                          if (currentItemIndex < category.items.length - 1) {
-                            setState(() {
-                              currentItemIndex++;
-                              currentSpelling = '';
-                            });
-                          } else {
-                            provider.completeGame();
-                            Navigator.pop(context);
-                          }
-                        });
-                      }
-                    },
-                    child: Text(letter, style: const TextStyle(fontSize: 24)),
-                  );
-                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(word.length, (index) {
+                    bool isFilled = index < currentSpelling.length;
+                    return Container(
+                      width: 45,
+                      height: 55,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.brown, width: 2),
+                      ),
+                      child: Center(
+                        child: Text(
+                          isFilled ? currentSpelling[index] : '_',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.brown,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
               ),
-            ),
-          ],
+              
+              const SizedBox(height: 30),
+              
+              // Letter Selection Panel
+              GamePanel(
+                height: 180,
+                width: MediaQuery.of(context).size.width * 0.9,
+                padding: const EdgeInsets.all(16),
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: letters.map((letter) {
+                      return SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: GameBlock(
+                          text: letter,
+                          onTap: () {
+                            if (currentSpelling.length < word.length) {
+                              setState(() {
+                                currentSpelling += letter;
+                              });
+                              if (currentSpelling == word) {
+                                provider.incrementScore();
+                                Future.delayed(const Duration(seconds: 1), () {
+                                  if (currentItemIndex < category.items.length - 1) {
+                                    setState(() {
+                                      currentItemIndex++;
+                                      currentSpelling = '';
+                                    });
+                                  } else {
+                                    provider.completeGame();
+                                    Navigator.pop(context);
+                                  }
+                                });
+                              }
+                            }
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );

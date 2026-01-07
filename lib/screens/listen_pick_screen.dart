@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../providers/game_provider.dart';
+import '../widgets/game_components.dart';
 
 class ListenPickScreen extends StatefulWidget {
   const ListenPickScreen({super.key});
@@ -17,33 +18,24 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
   int currentItemIndex = 0;
 
   Future<void> _playPrompt(String assetPath, String fallbackText) async {
-    // 1) Try playing a bundled asset audio file.
     try {
       await _audioPlayer.play(AssetSource(assetPath));
       return;
-    } catch (_) {
-      // ignore and try alternative path / fallback
-    }
+    } catch (_) {}
 
-    // 2) Some setups use paths without the leading "assets/".
     if (assetPath.startsWith('assets/')) {
       try {
         await _audioPlayer.play(
           AssetSource(assetPath.substring('assets/'.length)),
         );
         return;
-      } catch (_) {
-        // ignore and fallback to TTS
-      }
+      } catch (_) {}
     }
 
-    // 3) Fallback: speak the word using Text-to-Speech (works even if no audio assets exist).
     try {
       await _tts.stop();
       await _tts.speak(fallbackText);
-    } catch (_) {
-      // ignore
-    }
+    } catch (_) {}
   }
 
   @override
@@ -65,107 +57,152 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
     final correctItem = category.items[currentItemIndex];
     final options = [
       correctItem,
-      ...category.items.where((item) => item != correctItem).take(3),
+      ...category.items.where((item) => item != correctItem).take(2), // Take 3 items total for better spacing
     ]..shuffle();
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text(
-          'Listen & Pick',
-          style: TextStyle(
-            color: Color(0xFF2E5A27),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF2E5A27)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/game_bg.jpg'),
+            image: AssetImage('assets/images/home_new_bg.jpg'),
             fit: BoxFit.cover,
           ),
         ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () async {
-                        await _playPrompt(correctItem.audio, correctItem.name);
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 30),
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: WoodenSign(title: 'Listen & Pick'),
+                    ),
+                  ),
+                  const SizedBox(width: 48),
+                ],
+              ),
+              const SizedBox(height: 30),
+              
+              // Speaker Panel
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: GamePanel(
+                  height: 250,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.brown.shade800,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.orangeAccent, width: 4),
+                        ),
+                        child: IconButton(
+                          onPressed: () async {
+                            await _playPrompt(correctItem.audio, correctItem.name);
+                          },
+                          icon: const Icon(Icons.volume_up_rounded, size: 80, color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          await _playPrompt(correctItem.audio, correctItem.name);
+                        },
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text('Listen'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange.shade800,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Mascot Fox
+              const Padding(
+                padding: EdgeInsets.only(left: 30),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: MascotAnchor(icon: Icons.pets, color: Colors.orange),
+                ),
+              ),
+              
+              const Spacer(),
+              
+              // Selection Row
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white70, width: 2),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: options.map((item) {
+                    return GestureDetector(
+                      onTap: () {
+                        if (item == correctItem) {
+                          provider.incrementScore();
+                          Future.delayed(const Duration(seconds: 1), () {
+                            if (currentItemIndex < category.items.length - 1) {
+                              setState(() {
+                                currentItemIndex++;
+                              });
+                            } else {
+                              provider.completeGame();
+                              Navigator.pop(context);
+                            }
+                          });
+                        }
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        padding: const EdgeInsets.all(20),
-                        shape: const CircleBorder(),
+                      child: Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Image.asset(item.image, fit: BoxFit.contain),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.volume_up,
-                        size: 50,
-                        color: Colors.indigo,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Listen and choose the correct item!',
-                      style: TextStyle(fontSize: 20, color: Colors.white),
-                    ),
-                  ],
+                    );
+                  }).toList(),
                 ),
               ),
-            ),
-            Container(
-              height: 200,
-              child: GridView.builder(
-                padding: const EdgeInsets.all(20),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 20,
-                  mainAxisSpacing: 20,
+              
+              const Text(
+                'Which one did you hear?',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
                 ),
-                itemCount: options.length,
-                itemBuilder: (context, index) {
-                  final item = options[index];
-                  return GestureDetector(
-                    onTap: () {
-                      if (item == correctItem) {
-                        provider.incrementScore();
-                        Future.delayed(const Duration(seconds: 1), () {
-                          if (currentItemIndex < category.items.length - 1) {
-                            setState(() {
-                              currentItemIndex++;
-                            });
-                          } else {
-                            provider.completeGame();
-                            Navigator.pop(context);
-                          }
-                        });
-                      }
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Center(child: Image.asset(item.image)),
-                    ),
-                  );
-                },
               ),
-            ),
-          ],
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
