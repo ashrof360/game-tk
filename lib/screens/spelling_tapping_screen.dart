@@ -34,7 +34,7 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/home_new_bg.jpg'),
+            image: AssetImage('assets/images/game_bg.jpg'),
             fit: BoxFit.cover,
           ),
         ),
