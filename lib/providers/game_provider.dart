@@ -9,14 +9,16 @@ enum GameType { shadowMatching, spellingTapping, listenPick, counting }
 class GameProvider extends ChangeNotifier {
   Category? _selectedCategory;
   GameType? _currentGameType;
+  int _currentLevel = 1;
   int _currentScore = 0;
-  final Map<String, Set<GameType>> _progress =
-      {}; // category name -> completed games
+  
+  // category name -> { game type description -> max level completed }
+  final Map<String, Map<String, int>> _levelProgress = {};
 
   Category? get selectedCategory => _selectedCategory;
   GameType? get currentGameType => _currentGameType;
+  int get currentLevel => _currentLevel;
   int get currentScore => _currentScore;
-  Map<String, Set<GameType>> get progress => _progress;
 
   void selectCategory(Category category) {
     _selectedCategory = category;
@@ -25,6 +27,12 @@ class GameProvider extends ChangeNotifier {
 
   void selectGameType(GameType gameType) {
     _currentGameType = gameType;
+    _currentScore = 0;
+    notifyListeners();
+  }
+
+  void selectLevel(int level) {
+    _currentLevel = level;
     _currentScore = 0;
     notifyListeners();
   }
@@ -39,39 +47,53 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void completeGame() {
+  void completeLevel() {
     if (_selectedCategory != null && _currentGameType != null) {
-      _progress[_selectedCategory!.name] ??= {};
-      _progress[_selectedCategory!.name]!.add(_currentGameType!);
-      _saveProgress();
+      final categoryName = _selectedCategory!.name;
+      final gameTypeName = _currentGameType!.toString();
+      
+      _levelProgress[categoryName] ??= {};
+      final completedLevel = _levelProgress[categoryName]![gameTypeName] ?? 0;
+      
+      if (_currentLevel > completedLevel) {
+        _levelProgress[categoryName]![gameTypeName] = _currentLevel;
+        _saveProgress();
+      }
       notifyListeners();
     }
   }
 
-  bool isGameCompleted(String categoryName, GameType gameType) {
-    return _progress[categoryName]?.contains(gameType) ?? false;
+  int getHighestLevelCompleted(String categoryName, GameType gameType) {
+    return _levelProgress[categoryName]?[gameType.toString()] ?? 0;
+  }
+
+  bool isLevelUnlocked(String categoryName, GameType gameType, int level) {
+    if (level == 1) return true;
+    final highest = getHighestLevelCompleted(categoryName, gameType);
+    return level <= highest + 1;
   }
 
   Future<void> loadProgress() async {
     final prefs = await SharedPreferences.getInstance();
-    final progressString = prefs.getString('game_progress') ?? '{}';
-    final progressJson = jsonDecode(progressString) as Map<String, dynamic>;
-    _progress.clear();
-    progressJson.forEach((key, value) {
-      final set = (value as List<dynamic>)
-          .map((e) => GameType.values.firstWhere((gt) => gt.toString() == e))
-          .toSet();
-      _progress[key] = set;
-    });
+    final progressString = prefs.getString('level_progress_v2') ?? '{}';
+    try {
+      final progressJson = jsonDecode(progressString) as Map<String, dynamic>;
+      _levelProgress.clear();
+      progressJson.forEach((catKey, catValue) {
+        final gameMap = (catValue as Map<String, dynamic>).map(
+          (gameKey, levelVal) => MapEntry(gameKey, levelVal as int),
+        );
+        _levelProgress[catKey] = gameMap;
+      });
+    } catch (e) {
+      debugPrint('Error loading progress: $e');
+    }
     notifyListeners();
   }
 
   Future<void> _saveProgress() async {
     final prefs = await SharedPreferences.getInstance();
-    final progressJson = _progress.map(
-      (key, value) => MapEntry(key, value.map((e) => e.toString()).toList()),
-    );
-    final progressString = jsonEncode(progressJson);
-    await prefs.setString('game_progress', progressString);
+    final progressString = jsonEncode(_levelProgress);
+    await prefs.setString('level_progress_v2', progressString);
   }
 }

@@ -54,10 +54,19 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
       return const Scaffold(body: Center(child: Text('No items')));
     }
 
-    final correctItem = category.items[currentItemIndex];
+    final correctItem = category.items[currentItemIndex % category.items.length];
+    
+    // Level-based distractors
+    int optionsCount = 2 + (provider.currentLevel ~/ 3);
+    if (optionsCount > 6) optionsCount = 6;
+    if (optionsCount > category.items.length) optionsCount = category.items.length;
+
+    final otherItems = category.items.where((item) => item != correctItem).toList();
+    otherItems.shuffle();
+    
     final options = [
       correctItem,
-      ...category.items.where((item) => item != correctItem).take(2), // Take 3 items total for better spacing
+      ...otherItems.take(optionsCount - 1),
     ]..shuffle();
 
     return Scaffold(
@@ -113,17 +122,9 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                         ),
                       ),
                       const SizedBox(height: 15),
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          await _playPrompt(correctItem.audio, correctItem.name);
-                        },
-                        icon: const Icon(Icons.play_arrow),
-                        label: const Text('Listen'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange.shade800,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        ),
+                      const Text(
+                        'Tap to Listen',
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -132,53 +133,50 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
               
               const SizedBox(height: 20),
               
-              // Mascot Fox
-              const Padding(
-                padding: EdgeInsets.only(left: 30),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: MascotAnchor(icon: Icons.pets, color: Colors.orange),
-                ),
-              ),
-              
               const Spacer(),
               
-              // Selection Row
+              // Selection Wrap instead of Row for many options
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.4),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.white70, width: 2),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 15,
+                  runSpacing: 15,
                   children: options.map((item) {
                     return GestureDetector(
                       onTap: () {
                         if (item == correctItem) {
                           provider.incrementScore();
                           Future.delayed(const Duration(seconds: 1), () {
-                            if (currentItemIndex < category.items.length - 1) {
+                            // Level-based rounds
+                            int totalRounds = 2 + (provider.currentLevel ~/ 2);
+                            if (totalRounds > category.items.length) totalRounds = category.items.length;
+
+                            if (currentItemIndex < totalRounds - 1) {
                               setState(() {
                                 currentItemIndex++;
                               });
                             } else {
-                              provider.completeGame();
+                              provider.completeLevel();
                               Navigator.pop(context);
                             }
                           });
                         }
                       },
                       child: Container(
-                        width: 90,
-                        height: 90,
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(15),
                           boxShadow: [
-                            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                            BoxShadow(color: Colors.black26, blurRadius: 4, offset: const Offset(0, 2)),
                           ],
                         ),
                         child: Padding(

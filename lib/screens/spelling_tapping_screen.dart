@@ -23,9 +23,19 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
       return const Scaffold(body: Center(child: Text('No items')));
     }
 
-    final item = category.items[currentItemIndex];
+    final item = category.items[currentItemIndex % category.items.length];
     final word = item.name.toUpperCase();
     final letters = word.split('');
+    
+    // Level-based distractors (extra letters)
+    List<String> displayLetters = List.from(letters);
+    int extraLettersCount = (provider.currentLevel - 1);
+    if (extraLettersCount > 0) {
+      final alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      alphabet.shuffle();
+      displayLetters.addAll(alphabet.take(extraLettersCount));
+    }
+    displayLetters.shuffle();
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -115,9 +125,9 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
                   children: List.generate(word.length, (index) {
                     bool isFilled = index < currentSpelling.length;
                     return Container(
-                      width: 45,
-                      height: 55,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 40,
+                      height: 50,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
@@ -127,7 +137,7 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
                         child: Text(
                           isFilled ? currentSpelling[index] : '_',
                           style: const TextStyle(
-                            fontSize: 28,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Colors.brown,
                           ),
@@ -138,42 +148,55 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
                 ),
               ),
               
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
               
               // Letter Selection Panel
               GamePanel(
-                height: 180,
-                width: MediaQuery.of(context).size.width * 0.9,
-                padding: const EdgeInsets.all(16),
+                height: 200,
+                width: MediaQuery.of(context).size.width * 0.95,
+                padding: const EdgeInsets.all(12),
                 child: SingleChildScrollView(
                   child: Wrap(
                     alignment: WrapAlignment.center,
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: letters.map((letter) {
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: displayLetters.map((letter) {
                       return SizedBox(
-                        width: 60,
-                        height: 60,
+                        width: 50,
+                        height: 50,
                         child: GameBlock(
                           text: letter,
                           onTap: () {
                             if (currentSpelling.length < word.length) {
-                              setState(() {
-                                currentSpelling += letter;
-                              });
-                              if (currentSpelling == word) {
-                                provider.incrementScore();
-                                Future.delayed(const Duration(seconds: 1), () {
-                                  if (currentItemIndex < category.items.length - 1) {
-                                    setState(() {
-                                      currentItemIndex++;
-                                      currentSpelling = '';
-                                    });
-                                  } else {
-                                    provider.completeGame();
-                                    Navigator.pop(context);
-                                  }
+                              // Check if the tapped letter matches the next letter in the word
+                              String nextExpectedLetter = word[currentSpelling.length];
+                              if (letter == nextExpectedLetter) {
+                                setState(() {
+                                  currentSpelling += letter;
                                 });
+                                if (currentSpelling == word) {
+                                  provider.incrementScore();
+                                  Future.delayed(const Duration(seconds: 1), () {
+                                    // Level-based rounds
+                                    int totalRounds = 1 + (provider.currentLevel ~/ 3);
+                                    if (totalRounds > category.items.length) totalRounds = category.items.length;
+
+                                    if (currentItemIndex < totalRounds - 1) {
+                                      setState(() {
+                                        currentItemIndex++;
+                                        currentSpelling = '';
+                                      });
+                                    } else {
+                                      provider.completeLevel();
+                                      Navigator.pop(context);
+                                    }
+                                  });
+                                }
+                              } else {
+                                // Wrong letter tapped - maybe a small visual feedback eventually
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Try again!'), duration: Duration(milliseconds: 500)),
+                                );
                               }
                             }
                           },
@@ -183,7 +206,7 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
             ],
           ),
         ),

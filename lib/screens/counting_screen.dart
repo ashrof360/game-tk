@@ -21,8 +21,15 @@ class _CountingScreenState extends State<CountingScreen> {
   }
 
   void _resetItemCount() {
+    final provider = context.read<GameProvider>();
+    // Level-based item count range
+    int minCount = 1 + (provider.currentLevel ~/ 3);
+    int maxCount = 4 + provider.currentLevel;
+    if (maxCount > 12) maxCount = 12; // Cap for Wrap layout
+    if (minCount >= maxCount) minCount = maxCount - 1;
+
     setState(() {
-      itemCount = 3 + (currentItemIndex % 7); // Range 3-10 roughly
+      itemCount = minCount + (currentItemIndex * 7 + 3) % (maxCount - minCount + 1);
     });
   }
 
@@ -35,16 +42,19 @@ class _CountingScreenState extends State<CountingScreen> {
       return const Scaffold(body: Center(child: Text('No items')));
     }
 
-    final item = category.items[currentItemIndex];
+    final item = category.items[currentItemIndex % category.items.length];
     final itemLabel = item.name.toLowerCase();
     final itemLabelPlural = itemLabel.endsWith('s')
         ? itemLabel
         : '${itemLabel}s';
 
-    // Numbers for selection: current count + 3 others
+    // Numbers for selection: current count + distractors
+    int optionsCount = 3 + (provider.currentLevel ~/ 3);
+    if (optionsCount > 6) optionsCount = 6;
+    
     List<int> options = [itemCount];
-    while(options.length < 4) {
-      int rand = 1 + (itemCount + options.length) % 10;
+    while(options.length < optionsCount) {
+      int rand = 1 + (itemCount + options.length * 3 + 7) % 15;
       if (!options.contains(rand)) options.add(rand);
     }
     options.sort();
@@ -96,37 +106,27 @@ class _CountingScreenState extends State<CountingScreen> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 15,
-                          runSpacing: 15,
-                          children: List.generate(itemCount, (index) {
-                            return Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Image.asset(item.image, fit: BoxFit.contain),
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-                      // Owl Mascot
-                      const Positioned(
-                        right: 0,
-                        top: 20,
-                        child: MascotAnchor(icon: Icons.face_retouching_natural, color: Colors.brown),
-                      ),
-                    ],
+                  child: Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: List.generate(itemCount, (index) {
+                        return Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Image.asset(item.image, fit: BoxFit.contain),
+                          ),
+                        );
+                      }),
+                    ),
                   ),
                 ),
               ),
@@ -135,19 +135,21 @@ class _CountingScreenState extends State<CountingScreen> {
               
               // Number Selection Panel
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.4),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.white70, width: 2),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 15,
+                  runSpacing: 15,
                   children: options.map((num) {
                     return SizedBox(
-                      width: 70,
-                      height: 70,
+                      width: 65,
+                      height: 65,
                       child: GameBlock(
                         text: '$num',
                         baseColor: num % 2 == 0 ? Colors.orange : Colors.blue,
@@ -155,13 +157,17 @@ class _CountingScreenState extends State<CountingScreen> {
                           if (num == itemCount) {
                             provider.incrementScore();
                             Future.delayed(const Duration(seconds: 1), () {
-                              if (currentItemIndex < category.items.length - 1) {
+                              // Level-based rounds
+                              int totalRounds = 2 + (provider.currentLevel ~/ 3);
+                              if (totalRounds > category.items.length) totalRounds = category.items.length;
+
+                              if (currentItemIndex < totalRounds - 1) {
                                 setState(() {
                                   currentItemIndex++;
                                   _resetItemCount();
                                 });
                               } else {
-                                provider.completeGame();
+                                provider.completeLevel();
                                 Navigator.pop(context);
                               }
                             });
@@ -172,7 +178,7 @@ class _CountingScreenState extends State<CountingScreen> {
                   }).toList(),
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
             ],
           ),
         ),

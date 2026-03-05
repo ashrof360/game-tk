@@ -5,6 +5,7 @@ import 'shadow_matching_screen.dart';
 import 'spelling_tapping_screen.dart';
 import 'listen_pick_screen.dart';
 import 'counting_screen.dart';
+import 'level_selection_screen.dart';
 
 class GameSelectionScreen extends StatelessWidget {
   const GameSelectionScreen({super.key});
@@ -135,10 +136,11 @@ class GameSelectionScreen extends StatelessWidget {
                   itemCount: games.length,
                   itemBuilder: (context, index) {
                     final game = games[index];
-                    final isCompleted = provider.isGameCompleted(
+                    final highestLevel = provider.getHighestLevelCompleted(
                       category.name,
                       game['type'] as GameType,
                     );
+                    final isCompleted = highestLevel > 0;
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 20),
@@ -150,7 +152,9 @@ class GameSelectionScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => game['screen'] as Widget,
+                                builder: (context) => LevelSelectionScreen(
+                                  gameScreen: game['screen'] as Widget,
+                                ),
                               ),
                             );
                           },

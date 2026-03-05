@@ -28,14 +28,20 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
     final provider = context.read<GameProvider>();
     final category = provider.selectedCategory;
     if (category != null && category.items.isNotEmpty) {
-      final currentItem = category.items[currentItemIndex];
+      final currentItem = category.items[currentItemIndex % category.items.length];
       List<GameItem> options = [currentItem];
       
       final otherItems = category.items
           .where((item) => item != currentItem)
           .toList();
       otherItems.shuffle();
-      options.addAll(otherItems.take(5)); // Take more to fill a 2x3 grid if possible
+      
+      // Level-based distractors
+      int distractorCount = 2 + (provider.currentLevel ~/ 3);
+      if (distractorCount > 5) distractorCount = 5; // Max grid size constraints
+      if (distractorCount > otherItems.length) distractorCount = otherItems.length;
+
+      options.addAll(otherItems.take(distractorCount));
       options.shuffle();
       setState(() {
         shadowOptions = options;
@@ -51,14 +57,18 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
     });
     Future.delayed(const Duration(seconds: 1), () {
       final category = provider.selectedCategory!;
-      if (currentItemIndex < category.items.length - 1) {
+      // Level-based rounds
+      int totalRounds = 2 + (provider.currentLevel ~/ 2);
+      if (totalRounds > category.items.length) totalRounds = category.items.length;
+
+      if (currentItemIndex < totalRounds - 1) {
         setState(() {
           currentItemIndex++;
           isCorrect = false;
         });
         _prepareRound();
       } else {
-        provider.completeGame();
+        provider.completeLevel();
         Navigator.pop(context);
       }
     });

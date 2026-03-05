@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'category_selection_screen.dart';
+import 'main_selection_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -26,7 +26,7 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const CategorySelectionScreen(),
+                      builder: (context) => const MainSelectionScreen(),
                     ),
                   );
                 },
