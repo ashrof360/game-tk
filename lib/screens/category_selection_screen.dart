@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../data/game_data.dart';
 import '../providers/game_provider.dart';
-import 'game_selection_screen.dart';
+import 'level_selection_screen.dart';
 
 class CategorySelectionScreen extends StatelessWidget {
   const CategorySelectionScreen({super.key});
@@ -66,13 +66,13 @@ class CategorySelectionScreen extends StatelessWidget {
 
               return GestureDetector(
                 onTap: () {
-                  context.read<GameProvider>().selectCategory(category);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const GameSelectionScreen(),
-                    ),
-                  );
+                    context.read<GameProvider>().selectCategory(category);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LevelSelectionScreen(),
+                      ),
+                    );
                 },
                 child: Column(
                   children: [

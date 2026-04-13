@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/category.dart';
 
-enum GameType { shadowMatching, spellingTapping, listenPick, counting }
+enum GameType { shadowMatching, spellingTapping, listenPick, counting, mixed }
 
 class GameProvider extends ChangeNotifier {
   Category? _selectedCategory;
@@ -12,8 +12,8 @@ class GameProvider extends ChangeNotifier {
   int _currentLevel = 1;
   int _currentScore = 0;
   
-  // category name -> { game type description -> max level completed }
-  final Map<String, Map<String, int>> _levelProgress = {};
+  // category name -> max level completed
+  final Map<String, int> _levelProgress = {};
 
   Category? get selectedCategory => _selectedCategory;
   GameType? get currentGameType => _currentGameType;
@@ -48,42 +48,37 @@ class GameProvider extends ChangeNotifier {
   }
 
   void completeLevel() {
-    if (_selectedCategory != null && _currentGameType != null) {
+    if (_selectedCategory != null) {
       final categoryName = _selectedCategory!.name;
-      final gameTypeName = _currentGameType!.toString();
       
-      _levelProgress[categoryName] ??= {};
-      final completedLevel = _levelProgress[categoryName]![gameTypeName] ?? 0;
+      final completedLevel = _levelProgress[categoryName] ?? 0;
       
       if (_currentLevel > completedLevel) {
-        _levelProgress[categoryName]![gameTypeName] = _currentLevel;
+        _levelProgress[categoryName] = _currentLevel;
         _saveProgress();
       }
       notifyListeners();
     }
   }
 
-  int getHighestLevelCompleted(String categoryName, GameType gameType) {
-    return _levelProgress[categoryName]?[gameType.toString()] ?? 0;
+  int getHighestLevelCompleted(String categoryName) {
+    return _levelProgress[categoryName] ?? 0;
   }
 
-  bool isLevelUnlocked(String categoryName, GameType gameType, int level) {
+  bool isLevelUnlocked(String categoryName, int level) {
     if (level == 1) return true;
-    final highest = getHighestLevelCompleted(categoryName, gameType);
+    final highest = getHighestLevelCompleted(categoryName);
     return level <= highest + 1;
   }
 
   Future<void> loadProgress() async {
     final prefs = await SharedPreferences.getInstance();
-    final progressString = prefs.getString('level_progress_v2') ?? '{}';
+    final progressString = prefs.getString('level_progress_v3') ?? '{}';
     try {
       final progressJson = jsonDecode(progressString) as Map<String, dynamic>;
       _levelProgress.clear();
-      progressJson.forEach((catKey, catValue) {
-        final gameMap = (catValue as Map<String, dynamic>).map(
-          (gameKey, levelVal) => MapEntry(gameKey, levelVal as int),
-        );
-        _levelProgress[catKey] = gameMap;
+      progressJson.forEach((catKey, levelVal) {
+        _levelProgress[catKey] = levelVal as int;
       });
     } catch (e) {
       debugPrint('Error loading progress: $e');
@@ -94,6 +89,6 @@ class GameProvider extends ChangeNotifier {
   Future<void> _saveProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final progressString = jsonEncode(_levelProgress);
-    await prefs.setString('level_progress_v2', progressString);
+    await prefs.setString('level_progress_v3', progressString);
   }
 }
