@@ -67,7 +67,7 @@ class MainSelectionScreen extends StatelessWidget {
                       context,
                       title: 'Belajar',
                       subtitle: 'Belajar Bahasa Inggris',
-                      icon: Icons.menu_book_rounded,
+                      iconAsset: 'assets/images/learn_icon.png',
                       color1: const Color(0xFFFFB74D),
                       color2: const Color(0xFFF57C00),
                       onTap: () {
@@ -84,7 +84,7 @@ class MainSelectionScreen extends StatelessWidget {
                       context,
                       title: 'Bermain',
                       subtitle: 'Main Game Seru',
-                      icon: Icons.videogame_asset_rounded,
+                      iconAsset: 'assets/images/play_icon.png',
                       color1: const Color(0xFF64B5F6),
                       color2: const Color(0xFF1976D2),
                       onTap: () {
@@ -129,7 +129,7 @@ class MainSelectionScreen extends StatelessWidget {
     BuildContext context, {
     required String title,
     required String subtitle,
-    required IconData icon,
+    required String iconAsset,
     required Color color1,
     required Color color2,
     required VoidCallback onTap,
@@ -159,12 +159,19 @@ class MainSelectionScreen extends StatelessWidget {
           children: [
             const SizedBox(width: 25),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.3),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: Colors.white, size: 50),
+              child: Image.asset(
+                iconAsset,
+                width: 65,
+                height: 65,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => 
+                   const Icon(Icons.image, color: Colors.white, size: 50),
+              ),
             ),
             const SizedBox(width: 20),
             Column(
