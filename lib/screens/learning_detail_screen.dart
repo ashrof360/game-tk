@@ -22,6 +22,18 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
+  bool _isSpelling = false;
+  int _spellingIndex = -1;
+
+  final Map<String, String> _translations = {
+    'Apple': 'Apel', 'Bananas': 'Pisang', 'Orange': 'Jeruk', 'Grapes': 'Anggur',
+    'Blueberry': 'Bluberi', 'Cherries': 'Ceri', 'Strawberry': 'Stroberi',
+    'Pencil': 'Pensil', 'Book': 'Buku', 'Eraser': 'Penghapus', 'Ruler': 'Penggaris',
+    'Car': 'Mobil', 'Bus': 'Bus', 'Truck': 'Truk', 'Bike': 'Sepeda',
+    'Cat': 'Kucing', 'Dog': 'Anjing', 'Bird': 'Burung', 'Elephant': 'Gajah',
+    'Plate': 'Piring', 'Mug': 'Cangkir', 'Fork': 'Garpu', 'Pot': 'Panci',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -33,7 +45,6 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut)
     );
 
-    // Auto-play the first word
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _playSound();
     });
@@ -44,15 +55,16 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
     _audioPlayer.dispose();
     _tts.stop();
     _pulseController.dispose();
+    _isSpelling = false;
     super.dispose();
   }
 
   Future<void> _playSound() async {
+    if (_isSpelling) return;
     final item = widget.category.items[_currentIndex];
     final assetPath = item.audio;
     final fallbackText = item.name;
 
-    // Trigger visual pulse
     _pulseController.forward().then((_) => _pulseController.reverse());
 
     try {
@@ -70,17 +82,48 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
     }
 
     try {
-      await _tts.setPitch(1.2); // Child-friendly slightly higher pitch
-      await _tts.setSpeechRate(0.5); // Slightly slower for clarity
+      await _tts.setLanguage("en-US");
+      await _tts.setPitch(1.2); 
+      await _tts.setSpeechRate(0.5);
       await _tts.stop();
       await _tts.speak(fallbackText);
     } catch (_) {}
   }
 
+  Future<void> _spellWord() async {
+    if (_isSpelling) return;
+    setState(() { _isSpelling = true; });
+    final item = widget.category.items[_currentIndex];
+    final letters = item.name.toUpperCase().split('');
+    
+    await _tts.setLanguage("en-US");
+    await _tts.setPitch(1.3);
+    await _tts.setSpeechRate(0.4);
+
+    for (int i = 0; i < letters.length; i++) {
+       if (!mounted || !_isSpelling) return;
+       setState(() { _spellingIndex = i; });
+       await _tts.speak(letters[i]);
+       await Future.delayed(const Duration(milliseconds: 800));
+    }
+    
+    if (!mounted) return;
+    setState(() { 
+      _spellingIndex = -1; 
+      _isSpelling = false;
+    });
+    
+    await Future.delayed(const Duration(milliseconds: 300));
+    await _playSound();
+  }
+
   void _nextItem() {
     if (_currentIndex < widget.category.items.length - 1) {
+      _tts.stop();
       setState(() {
         _currentIndex++;
+        _isSpelling = false;
+        _spellingIndex = -1;
       });
       _playSound();
     }
@@ -88,8 +131,11 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
 
   void _previousItem() {
     if (_currentIndex > 0) {
+      _tts.stop();
       setState(() {
         _currentIndex--;
+        _isSpelling = false;
+        _spellingIndex = -1;
       });
       _playSound();
     }
@@ -102,10 +148,10 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
     }
 
     final item = widget.category.items[_currentIndex];
-
-    // Colors matching a fun vibe
+    final translation = _translations[item.name] ?? '';
     final cardColor = Colors.white.withOpacity(0.95);
     final themeColor = Colors.green.shade600;
+    final letters = item.name.toUpperCase().split('');
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -160,7 +206,7 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.star_rounded, color: Colors.amber, size: 28),
+                      const Icon(Icons.star_rounded, color: Colors.amber, size: 28),
                       const SizedBox(width: 8),
                       Text(
                         '${_currentIndex + 1} / ${widget.category.items.length}',
@@ -182,7 +228,6 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 500),
                   transitionBuilder: (Widget child, Animation<double> animation) {
-                     // Dynamic scale and rotate transition
                      return ScaleTransition(
                        scale: animation,
                        child: RotationTransition(
@@ -191,37 +236,36 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
                        ),
                      );
                   },
-                  // Use item.name as key so it triggers transition when item changes
-                  child: GestureDetector(
+                  child: ScaleTransition(
                     key: ValueKey<String>(item.name),
-                    onTap: _playSound,
-                    child: ScaleTransition( // Added nested scale for pulse effect on audio playing
-                      scale: _pulseAnimation,
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(40),
-                          border: Border.all(color: Colors.amber.shade700, width: 6),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 15,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Column(
-                              children: [
-                                const SizedBox(height: 40),
-                                // Image with bouncy feel
-                                Padding(
+                    scale: _pulseAnimation,
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(40),
+                        border: Border.all(color: Colors.amber.shade700, width: 6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Column(
+                            children: [
+                              const SizedBox(height: 40),
+                              // Image with onTap
+                              GestureDetector(
+                                onTap: _playSound,
+                                child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 30.0),
                                   child: SizedBox(
-                                    height: 180,
+                                    height: 160,
                                     child: Image.asset(
                                       item.image,
                                       fit: BoxFit.contain,
@@ -230,69 +274,137 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 30),
-                                // Text Banner Segment
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(vertical: 25),
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                       colors: [Color(0xFF64B5F6), Color(0xFF1976D2)],
-                                       begin: Alignment.topCenter,
-                                       end: Alignment.bottomCenter,
-                                    ),
-                                    borderRadius: BorderRadius.only(
-                                      bottomLeft: Radius.circular(34),
-                                      bottomRight: Radius.circular(34),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    item.name.toUpperCase(),
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 38,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                      letterSpacing: 3,
-                                      shadows: [
-                                        Shadow(color: Colors.black38, offset: Offset(2, 2), blurRadius: 4),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            
-                            // Audio Button Badge
-                            Positioned(
-                              top: -20,
-                              right: -20,
-                              child: Container(
-                                padding: const EdgeInsets.all(5),
+                              ),
+                              const SizedBox(height: 20),
+                              
+                              // Translation Banner
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.shade400,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 4),
-                                  boxShadow: const [
-                                     BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 4))
-                                  ]
+                                  color: Colors.orange.shade100,
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: Colors.orange.shade300, width: 2)
                                 ),
-                                child: IconButton(
-                                  iconSize: 40,
-                                  icon: const Icon(Icons.volume_up_rounded, color: Colors.white),
-                                  onPressed: _playSound,
+                                child: Text(
+                                  translation,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange.shade900,
+                                  ),
                                 ),
                               ),
+                              const SizedBox(height: 15),
+                              
+                              // Interactive Spelling Banner
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 20),
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                     colors: [Color(0xFF64B5F6), Color(0xFF1976D2)],
+                                     begin: Alignment.topCenter,
+                                     end: Alignment.bottomCenter,
+                                  ),
+                                  borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(34),
+                                    bottomRight: Radius.circular(34),
+                                  ),
+                                ),
+                                child: Wrap(
+                                  alignment: WrapAlignment.center,
+                                  spacing: 4,
+                                  runSpacing: 8,
+                                  children: List.generate(letters.length, (idx) {
+                                    bool isHighlighted = _spellingIndex == idx;
+                                    return GestureDetector(
+                                      onTap: () async {
+                                        if(!_isSpelling) {
+                                          await _tts.setLanguage("en-US");
+                                          await _tts.speak(letters[idx]);
+                                        }
+                                      },
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 200),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: isHighlighted ? Colors.yellow.shade400 : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: isHighlighted ? Border.all(color: Colors.white, width: 2) : null,
+                                        ),
+                                        child: Text(
+                                          letters[idx],
+                                          style: TextStyle(
+                                            fontSize: 38,
+                                            fontWeight: FontWeight.w900,
+                                            color: isHighlighted ? Colors.red.shade700 : Colors.white,
+                                            letterSpacing: 1,
+                                            shadows: isHighlighted ? [] : const [
+                                              Shadow(color: Colors.black38, offset: Offset(2, 2), blurRadius: 4),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ],
+                          ),
+                          
+                          // Audio Button
+                          Positioned(
+                            top: -20,
+                            right: -20,
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade400,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 4),
+                                boxShadow: const [
+                                   BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 4))
+                                ]
+                              ),
+                              child: IconButton(
+                                iconSize: 40,
+                                icon: const Icon(Icons.volume_up_rounded, color: Colors.white),
+                                onPressed: _playSound,
+                              ),
                             ),
-                            
-                            // Mascot Mascot (Owl/Bird) looking at the card
-                            const Positioned(
-                              top: -40,
-                              left: -10,
-                              child: MascotAnchor(icon: Icons.face_retouching_natural, color: Colors.purple),
+                          ),
+                          
+                          // Spell Button (Magic Wand)
+                          Positioned(
+                            top: -20,
+                            left: -20,
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.shade400,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 4),
+                                boxShadow: const [
+                                   BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 4))
+                                ]
+                              ),
+                              child: IconButton(
+                                iconSize: 40,
+                                icon: _isSpelling 
+                                      ? const Icon(Icons.stop_rounded, color: Colors.white)
+                                      : const Icon(Icons.auto_fix_high_rounded, color: Colors.white),
+                                onPressed: () {
+                                  if (_isSpelling) {
+                                     _tts.stop();
+                                     setState(() { _isSpelling = false; _spellingIndex = -1; });
+                                  } else {
+                                     _spellWord();
+                                  }
+                                },
+                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
