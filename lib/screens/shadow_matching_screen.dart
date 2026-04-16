@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../models/category.dart';
 import '../widgets/game_components.dart';
+import '../services/sound_service.dart';
 
 class ShadowMatchingScreen extends StatefulWidget {
   const ShadowMatchingScreen({super.key});
@@ -15,6 +16,16 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
   int currentItemIndex = 0;
   List<GameItem> shadowOptions = [];
   bool isCorrect = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 400), () {
+         SoundService().playQuestion("Match the item to its shadow!");
+      });
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -134,7 +145,12 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
                       return DragTarget<GameItem>(
                         onAccept: (draggedItem) {
                           if (draggedItem == item) {
-                            _onCorrectMatch();
+                            if (item == currentTarget) {
+                              SoundService().playCorrect();
+                              _onCorrectMatch();
+                            } else {
+                              SoundService().playWrong();
+                            }
                           }
                         },
                         builder: (context, candidateData, rejectedData) {
@@ -181,6 +197,10 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
                     opacity: 0.3,
                     child: Image.asset(currentTarget.image, width: 100, height: 100),
                   ),
+                  onDraggableCanceled: (velocity, offset) {
+                     // They dropped it on essentially nothing
+                     SoundService().playWrong();
+                  },
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(

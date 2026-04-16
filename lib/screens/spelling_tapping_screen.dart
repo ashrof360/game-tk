@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../widgets/game_components.dart';
+import '../services/sound_service.dart';
 
 class SpellingTappingScreen extends StatefulWidget {
   const SpellingTappingScreen({super.key});
@@ -13,6 +14,25 @@ class SpellingTappingScreen extends StatefulWidget {
 class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
   int currentItemIndex = 0;
   String currentSpelling = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _playStartAudio();
+    });
+  }
+
+  void _playStartAudio() {
+    final provider = context.read<GameProvider>();
+    final category = provider.selectedCategory;
+    if (category != null && category.items.isNotEmpty) {
+      final item = category.items[currentItemIndex % category.items.length];
+      Future.delayed(const Duration(milliseconds: 300), () {
+        SoundService().playQuestion("Let's spell ${item.name}!");
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,10 +191,12 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
                               // Check if the tapped letter matches the next letter in the word
                               String nextExpectedLetter = word[currentSpelling.length];
                               if (letter == nextExpectedLetter) {
+                                // Right Letter
                                 setState(() {
                                   currentSpelling += letter;
                                 });
                                 if (currentSpelling == word) {
+                                  SoundService().playCorrect();
                                   provider.incrementScore();
                                   Future.delayed(const Duration(seconds: 1), () {
                                     // Level-based rounds
@@ -186,6 +208,7 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
                                         currentItemIndex++;
                                         currentSpelling = '';
                                       });
+                                      _playStartAudio();
                                     } else {
                                       provider.completeLevel();
                                       Navigator.pop(context);
@@ -193,10 +216,8 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
                                   });
                                 }
                               } else {
-                                // Wrong letter tapped - maybe a small visual feedback eventually
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Try again!'), duration: Duration(milliseconds: 500)),
-                                );
+                                // Wrong letter tapped
+                                SoundService().playWrong();
                               }
                             }
                           },

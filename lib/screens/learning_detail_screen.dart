@@ -83,8 +83,8 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
 
     try {
       await _tts.setLanguage("en-US");
-      await _tts.setPitch(1.2); 
-      await _tts.setSpeechRate(0.5);
+      await _tts.setPitch(1.6); 
+      await _tts.setSpeechRate(0.45);
       await _tts.stop();
       await _tts.speak(fallbackText);
     } catch (_) {}
@@ -97,7 +97,7 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> with Single
     final letters = item.name.toUpperCase().split('');
     
     await _tts.setLanguage("en-US");
-    await _tts.setPitch(1.3);
+    await _tts.setPitch(1.8);
     await _tts.setSpeechRate(0.4);
 
     for (int i = 0; i < letters.length; i++) {

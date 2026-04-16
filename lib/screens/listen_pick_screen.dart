@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import '../providers/game_provider.dart';
 import '../widgets/game_components.dart';
+import '../services/sound_service.dart';
 
 class ListenPickScreen extends StatefulWidget {
   const ListenPickScreen({super.key});
@@ -13,36 +12,25 @@ class ListenPickScreen extends StatefulWidget {
 }
 
 class _ListenPickScreenState extends State<ListenPickScreen> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  final FlutterTts _tts = FlutterTts();
   int currentItemIndex = 0;
 
-  Future<void> _playPrompt(String assetPath, String fallbackText) async {
-    try {
-      await _audioPlayer.play(AssetSource(assetPath));
-      return;
-    } catch (_) {}
-
-    if (assetPath.startsWith('assets/')) {
-      try {
-        await _audioPlayer.play(
-          AssetSource(assetPath.substring('assets/'.length)),
-        );
-        return;
-      } catch (_) {}
-    }
-
-    try {
-      await _tts.stop();
-      await _tts.speak(fallbackText);
-    } catch (_) {}
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _playStartAudio();
+    });
   }
 
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    _tts.stop();
-    super.dispose();
+  void _playStartAudio() {
+    final provider = context.read<GameProvider>();
+    final category = provider.selectedCategory;
+    if (category != null && category.items.isNotEmpty) {
+      final correctItem = category.items[currentItemIndex % category.items.length];
+      Future.delayed(const Duration(milliseconds: 300), () {
+        SoundService().playItemAudio(correctItem.audio, correctItem.name);
+      });
+    }
   }
 
   @override
@@ -116,7 +104,7 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                         ),
                         child: IconButton(
                           onPressed: () async {
-                            await _playPrompt(correctItem.audio, correctItem.name);
+                            await SoundService().playItemAudio(correctItem.audio, correctItem.name);
                           },
                           icon: const Icon(Icons.volume_up_rounded, size: 80, color: Colors.white),
                         ),
@@ -152,6 +140,7 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                     return GestureDetector(
                       onTap: () {
                         if (item == correctItem) {
+                          SoundService().playCorrect();
                           provider.incrementScore();
                           Future.delayed(const Duration(seconds: 1), () {
                             // Level-based rounds
@@ -162,11 +151,14 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                               setState(() {
                                 currentItemIndex++;
                               });
+                              _playStartAudio();
                             } else {
                               provider.completeLevel();
                               Navigator.pop(context);
                             }
                           });
+                        } else {
+                          SoundService().playWrong();
                         }
                       },
                       child: Container(
@@ -175,8 +167,8 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black26, blurRadius: 4, offset: const Offset(0, 2)),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
                           ],
                         ),
                         child: Padding(

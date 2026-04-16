@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../widgets/game_components.dart';
+import '../services/sound_service.dart';
 
 class CountingScreen extends StatefulWidget {
   const CountingScreen({super.key});
@@ -17,7 +18,9 @@ class _CountingScreenState extends State<CountingScreen> {
   @override
   void initState() {
     super.initState();
-    _resetItemCount();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resetItemCount();
+    });
   }
 
   void _resetItemCount() {
@@ -31,6 +34,16 @@ class _CountingScreenState extends State<CountingScreen> {
     setState(() {
       itemCount = minCount + (currentItemIndex * 7 + 3) % (maxCount - minCount + 1);
     });
+
+    final category = provider.selectedCategory;
+    if (category != null && category.items.isNotEmpty) {
+      final item = category.items[currentItemIndex % category.items.length];
+      final itemLabel = item.name.toLowerCase();
+      final itemLabelPlural = itemLabel.endsWith('s') ? itemLabel : '${itemLabel}s';
+      Future.delayed(const Duration(milliseconds: 300), () {
+         SoundService().playQuestion('How many $itemLabelPlural?');
+      });
+    }
   }
 
   @override
@@ -76,7 +89,7 @@ class _CountingScreenState extends State<CountingScreen> {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  IconButton(
+                   IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 30),
                   ),
@@ -155,6 +168,7 @@ class _CountingScreenState extends State<CountingScreen> {
                         baseColor: num % 2 == 0 ? Colors.orange : Colors.blue,
                         onTap: () {
                           if (num == itemCount) {
+                            SoundService().playCorrect();
                             provider.incrementScore();
                             Future.delayed(const Duration(seconds: 1), () {
                               // Level-based rounds
@@ -162,15 +176,15 @@ class _CountingScreenState extends State<CountingScreen> {
                               if (totalRounds > category.items.length) totalRounds = category.items.length;
 
                               if (currentItemIndex < totalRounds - 1) {
-                                setState(() {
-                                  currentItemIndex++;
-                                  _resetItemCount();
-                                });
+                                currentItemIndex++;
+                                _resetItemCount();
                               } else {
                                 provider.completeLevel();
                                 Navigator.pop(context);
                               }
                             });
+                          } else {
+                            SoundService().playWrong();
                           }
                         },
                       ),
