@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'category_selection_screen.dart';
 import 'learning_english_screen.dart';
+import '../services/sound_service.dart';
 
 class MainSelectionScreen extends StatelessWidget {
   const MainSelectionScreen({super.key});
@@ -71,12 +72,15 @@ class MainSelectionScreen extends StatelessWidget {
                       color1: const Color(0xFFFFB74D),
                       color2: const Color(0xFFF57C00),
                       onTap: () {
+                        SoundService().playBGM('audio/sonican-joy-for-children-254840.mp3');
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const LearningEnglishScreen(),
                           ),
-                        );
+                        ).then((_) {
+                           SoundService().playBGM('audio/hitslab-game-gaming-music-295075.mp3');
+                        });
                       },
                     ),
                     const SizedBox(height: 30),
@@ -88,12 +92,15 @@ class MainSelectionScreen extends StatelessWidget {
                       color1: const Color(0xFF64B5F6),
                       color2: const Color(0xFF1976D2),
                       onTap: () {
+                        SoundService().playBGM('audio/sonican-joy-for-children-254840.mp3');
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const CategorySelectionScreen(),
                           ),
-                        );
+                        ).then((_) {
+                           SoundService().playBGM('audio/hitslab-game-gaming-music-295075.mp3');
+                        });
                       },
                     ),
                   ],

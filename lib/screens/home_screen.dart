@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'main_selection_screen.dart';
+import '../services/sound_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -23,12 +24,15 @@ class HomeScreen extends StatelessWidget {
               alignment: const Alignment(0, 0.22), // Adjusted to match the 'Start' position in the image
               child: GestureDetector(
                 onTap: () {
+                  SoundService().playBGM('audio/hitslab-game-gaming-music-295075.mp3');
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const MainSelectionScreen(),
                     ),
-                  );
+                  ).then((_) {
+                     SoundService().stopBGM();
+                  });
                 },
                 child: Container(
                   width: 180,

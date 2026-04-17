@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/game_provider.dart';
 import 'screens/splash_screen.dart';
+import 'services/sound_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,14 +15,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => GameProvider())],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'English Learning Game',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) {
+           SoundService().playTap();
+        },
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'English Learning Game',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+            useMaterial3: true,
+          ),
+          home: const SplashScreen(),
         ),
-        home: const SplashScreen(),
       ),
     );
   }

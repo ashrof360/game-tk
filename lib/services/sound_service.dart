@@ -7,9 +7,12 @@ class SoundService {
   
   final FlutterTts _tts = FlutterTts();
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _sfxPlayer = AudioPlayer();
+  final AudioPlayer _bgmPlayer = AudioPlayer();
 
   bool _isTtsPlaying = false;
   DateTime _lastWrongPlay = DateTime.now().subtract(const Duration(seconds: 2));
+  DateTime _lastTap = DateTime.now().subtract(const Duration(seconds: 2));
 
   SoundService._internal() {
     _initTTS();
@@ -35,7 +38,7 @@ class SoundService {
   Future<void> playQuestion(String text) async {
     await _tts.stop();
     await _tts.setLanguage("en-US");
-    await _tts.setPitch(1.6);
+    await _tts.setPitch(1.85); // Dinaikkan mendekati titik melengking khas anak kecil
     await _tts.setSpeechRate(0.45);
     await _tts.speak(text);
   }
@@ -61,9 +64,43 @@ class SoundService {
     if (_isTtsPlaying) await _tts.stop(); 
     
     await _tts.setLanguage("en-US");
-    await _tts.setPitch(1.2); 
+    await _tts.setPitch(1.6); // Dulu 1.2, dinaikkan agar "Try again" tetap terkesan seperti anak-anak
     await _tts.setSpeechRate(0.45);
     await _tts.speak("Try again!");
+  }
+
+  /// Plays a fast, high-pitch "Bop!" sound for UI taps
+  Future<void> playTap() async {
+    final now = DateTime.now();
+    // Anti-spam for rapid tapping UI
+    if (now.difference(_lastTap).inMilliseconds < 150) return;
+    _lastTap = now;
+    
+    try {
+      // AssetSource automatically prepends "assets/"
+      await _sfxPlayer.play(AssetSource('audio/freesound_crunchpixstudio-clear-combo-7-394494.mp3'));
+    } catch (e) {
+      print("SFX error: $e");
+    }
+  }
+
+  /// Plays background music in a loop
+  Future<void> playBGM(String assetPath) async {
+    try {
+      await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+      await _bgmPlayer.play(AssetSource(assetPath));
+    } catch (e) {
+      print("BGM error: $e");
+    }
+  }
+
+  /// Stops background music
+  Future<void> stopBGM() async {
+    try {
+      await _bgmPlayer.stop();
+    } catch (e) {
+      print("Stop BGM error: $e");
+    }
   }
 
   /// Plays item audio based on game data (local mp3 asset, or fallback TTS)
@@ -84,7 +121,7 @@ class SoundService {
 
     // Fallback to TTS if no audio file present
     await _tts.setLanguage("en-US");
-    await _tts.setPitch(1.6);
+    await _tts.setPitch(1.85); // Pita suara dinaikkan ekstrem agar imut
     await _tts.setSpeechRate(0.45);
     await _tts.speak(fallbackText);
   }

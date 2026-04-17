@@ -67,7 +67,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
       return const Scaffold(body: Center(child: Text('Error: Missing category')));
     }
 
-    final int totalLevels = 10;
+    final int totalLevels = 4;
     final double levelHeight = 160.0;
     final double totalHeight = totalLevels * levelHeight + 200.0; // Extra padding
     final double screenWidth = MediaQuery.of(context).size.width;

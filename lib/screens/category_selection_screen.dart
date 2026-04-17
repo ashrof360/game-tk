@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../data/game_data.dart';
 import '../providers/game_provider.dart';
 import 'level_selection_screen.dart';
+import '../services/sound_service.dart';
 
 class CategorySelectionScreen extends StatelessWidget {
   const CategorySelectionScreen({super.key});
@@ -66,13 +67,16 @@ class CategorySelectionScreen extends StatelessWidget {
 
               return GestureDetector(
                 onTap: () {
+                    SoundService().stopBGM();
                     context.read<GameProvider>().selectCategory(category);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const LevelSelectionScreen(),
                       ),
-                    );
+                    ).then((_) {
+                       SoundService().playBGM('audio/sonican-joy-for-children-254840.mp3');
+                    });
                 },
                 child: Column(
                   children: [

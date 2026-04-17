@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/game_data.dart';
 import 'learning_detail_screen.dart';
+import '../services/sound_service.dart';
 
 class LearningEnglishScreen extends StatelessWidget {
   const LearningEnglishScreen({super.key});
@@ -77,12 +78,15 @@ class LearningEnglishScreen extends StatelessWidget {
 
                     return GestureDetector(
                       onTap: () {
+                        SoundService().stopBGM();
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => LearningDetailScreen(category: category),
                           ),
-                        );
+                        ).then((_) {
+                           SoundService().playBGM('audio/sonican-joy-for-children-254840.mp3');
+                        });
                       },
                       child: Column(
                         children: [
