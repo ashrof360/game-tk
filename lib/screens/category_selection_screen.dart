@@ -10,12 +10,16 @@ class CategorySelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
+    return Consumer<GameProvider>(
+      builder: (context, provider, child) {
+        final isIndo = provider.isIndonesian;
+        
+        return Scaffold(
+          extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
-          'Choose Category',
-          style: TextStyle(
+        title: Text(
+          isIndo ? 'Pilih Kategori' : 'Choose Category',
+          style: const TextStyle(
             color: Color(0xFF2E5A27),
             fontWeight: FontWeight.bold,
             fontSize: 28,
@@ -147,7 +151,7 @@ class CategorySelectionScreen extends StatelessWidget {
                         ],
                       ),
                       child: Text(
-                        category.name,
+                        isIndo ? category.nameId : category.name,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
@@ -168,6 +172,8 @@ class CategorySelectionScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+      },
     );
   }
 }

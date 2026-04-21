@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/game_provider.dart';
 import 'category_selection_screen.dart';
 import 'learning_english_screen.dart';
 import '../services/sound_service.dart';
@@ -8,8 +10,12 @@ class MainSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
+    return Consumer<GameProvider>(
+      builder: (context, provider, child) {
+        final isIndo = provider.isIndonesian;
+        
+        return Scaffold(
+          body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
@@ -41,9 +47,9 @@ class MainSelectionScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Text(
-                  'Pilih Mode',
-                  style: TextStyle(
+                child: Text(
+                  isIndo ? 'Pilih Mode' : 'Choose Mode',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 32,
@@ -66,8 +72,8 @@ class MainSelectionScreen extends StatelessWidget {
                   children: [
                     _buildSelectionButton(
                       context,
-                      title: 'Belajar',
-                      subtitle: 'Belajar Bahasa Inggris',
+                      title: isIndo ? 'Belajar' : 'Learn',
+                      subtitle: isIndo ? 'Belajar Bahasa Inggris' : 'Learn English',
                       iconAsset: 'assets/images/learn_icon.png',
                       color1: const Color(0xFFFFB74D),
                       color2: const Color(0xFFF57C00),
@@ -86,8 +92,8 @@ class MainSelectionScreen extends StatelessWidget {
                     const SizedBox(height: 30),
                     _buildSelectionButton(
                       context,
-                      title: 'Bermain',
-                      subtitle: 'Main Game Seru',
+                      title: isIndo ? 'Bermain' : 'Play',
+                      subtitle: isIndo ? 'Main Game Seru' : 'Play Fun Games',
                       iconAsset: 'assets/images/play_icon.png',
                       color1: const Color(0xFF64B5F6),
                       color2: const Color(0xFF1976D2),
@@ -129,6 +135,8 @@ class MainSelectionScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+      },
     );
   }
 

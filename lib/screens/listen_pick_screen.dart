@@ -35,12 +35,14 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<GameProvider>();
-    final category = provider.selectedCategory;
+    return Consumer<GameProvider>(
+      builder: (context, provider, child) {
+        final isIndo = provider.isIndonesian;
+        final category = provider.selectedCategory;
 
-    if (category == null || category.items.isEmpty) {
-      return const Scaffold(body: Center(child: Text('No items')));
-    }
+        if (category == null || category.items.isEmpty) {
+          return Scaffold(body: Center(child: Text(isIndo ? 'Tidak ada buah' : 'No items')));
+        }
 
     final correctItem = category.items[currentItemIndex % category.items.length];
     
@@ -78,9 +80,9 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 30),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Center(
-                      child: WoodenSign(title: 'Listen & Pick'),
+                      child: WoodenSign(title: isIndo ? 'Dengar & Pilih' : 'Listen & Pick'),
                     ),
                   ),
                   const SizedBox(width: 48),
@@ -110,9 +112,9 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                         ),
                       ),
                       const SizedBox(height: 15),
-                      const Text(
-                        'Tap to Listen',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      Text(
+                        isIndo ? 'Ketuk untuk Mendengar' : 'Tap to Listen',
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -140,7 +142,7 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                     return GestureDetector(
                       onTap: () {
                         if (item == correctItem) {
-                          SoundService().playCorrect();
+                          SoundService().playCorrect(isIndo: isIndo);
                           provider.incrementScore();
                           Future.delayed(const Duration(seconds: 1), () {
                             // Level-based rounds
@@ -158,7 +160,7 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                             }
                           });
                         } else {
-                          SoundService().playWrong();
+                          SoundService().playWrong(isIndo: isIndo);
                         }
                       },
                       child: Container(
@@ -181,9 +183,9 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                 ),
               ),
               
-              const Text(
-                'Which one did you hear?',
-                style: TextStyle(
+              Text(
+                isIndo ? 'Mana yang kamu dengar?' : 'Which one did you hear?',
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -195,6 +197,8 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 }

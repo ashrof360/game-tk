@@ -22,7 +22,11 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 400), () {
-         SoundService().playQuestion("Match the item to its shadow!");
+         final isIndo = context.read<GameProvider>().isIndonesian;
+         SoundService().playQuestion(
+           isIndo ? "Cocokkan benda dengan bayangannya!" : "Match the item to its shadow!",
+           isIndo: isIndo
+         );
       });
     });
   }
@@ -60,7 +64,7 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
     }
   }
 
-  void _onCorrectMatch() {
+  void _onCorrectMatch(bool isIndo) {
     final provider = context.read<GameProvider>();
     provider.incrementScore();
     setState(() {
@@ -87,16 +91,18 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<GameProvider>();
-    final category = provider.selectedCategory;
+    return Consumer<GameProvider>(
+      builder: (context, provider, child) {
+        final isIndo = provider.isIndonesian;
+        final category = provider.selectedCategory;
 
-    if (category == null || category.items.isEmpty) {
-      return const Scaffold(body: Center(child: Text('No items')));
-    }
+        if (category == null || category.items.isEmpty) {
+          return Scaffold(body: Center(child: Text(isIndo ? 'Tidak ada item' : 'No items')));
+        }
 
-    final currentTarget = category.items[currentItemIndex];
+        final currentTarget = category.items[currentItemIndex];
 
-    return Scaffold(
+        return Scaffold(
       extendBodyBehindAppBar: true,
       body: Container(
         width: double.infinity,
@@ -117,9 +123,9 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 30),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Center(
-                      child: WoodenSign(title: 'Shadow Matching'),
+                      child: WoodenSign(title: isIndo ? 'Cari Bayangan' : 'Shadow Matching'),
                     ),
                   ),
                   const SizedBox(width: 48), // Spacer for centering
@@ -146,10 +152,10 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
                         onAccept: (draggedItem) {
                           if (draggedItem == item) {
                             if (item == currentTarget) {
-                              SoundService().playCorrect();
-                              _onCorrectMatch();
+                              SoundService().playCorrect(isIndo: isIndo);
+                              _onCorrectMatch(isIndo);
                             } else {
-                              SoundService().playWrong();
+                              SoundService().playWrong(isIndo: isIndo);
                             }
                           }
                         },
@@ -198,8 +204,7 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
                     child: Image.asset(currentTarget.image, width: 100, height: 100),
                   ),
                   onDraggableCanceled: (velocity, offset) {
-                     // They dropped it on essentially nothing
-                     SoundService().playWrong();
+                     SoundService().playWrong(isIndo: isIndo);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(10),
@@ -212,9 +217,9 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
                 ),
                 
               const SizedBox(height: 20),
-              const Text(
-                'Match the item to its shadow!',
-                style: TextStyle(
+              Text(
+                isIndo ? 'Cocokkan benda dengan bayangannya!' : 'Match the item to its shadow!',
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -226,6 +231,8 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 }

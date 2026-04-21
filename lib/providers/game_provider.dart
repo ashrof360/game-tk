@@ -11,6 +11,8 @@ class GameProvider extends ChangeNotifier {
   GameType? _currentGameType;
   int _currentLevel = 1;
   int _currentScore = 0;
+  bool _isIndonesian = true; // default language
+  
   
   // category name -> max level completed
   final Map<String, int> _levelProgress = {};
@@ -19,6 +21,7 @@ class GameProvider extends ChangeNotifier {
   GameType? get currentGameType => _currentGameType;
   int get currentLevel => _currentLevel;
   int get currentScore => _currentScore;
+  bool get isIndonesian => _isIndonesian;
 
   void selectCategory(Category category) {
     _selectedCategory = category;
@@ -61,6 +64,12 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
+  void toggleLanguage() {
+    _isIndonesian = !_isIndonesian;
+    _saveProgress(); // Use same prefs persistence function
+    notifyListeners();
+  }
+
   int getHighestLevelCompleted(String categoryName) {
     return _levelProgress[categoryName] ?? 0;
   }
@@ -78,7 +87,11 @@ class GameProvider extends ChangeNotifier {
       final progressJson = jsonDecode(progressString) as Map<String, dynamic>;
       _levelProgress.clear();
       progressJson.forEach((catKey, levelVal) {
-        _levelProgress[catKey] = levelVal as int;
+        if (catKey == 'isIndonesian_setting') {
+           _isIndonesian = levelVal as bool;
+        } else {
+           _levelProgress[catKey] = levelVal as int;
+        }
       });
     } catch (e) {
       debugPrint('Error loading progress: $e');
@@ -88,7 +101,12 @@ class GameProvider extends ChangeNotifier {
 
   Future<void> _saveProgress() async {
     final prefs = await SharedPreferences.getInstance();
-    final progressString = jsonEncode(_levelProgress);
+    
+    // Create a copy of map to append settings since we are serializing everything together for simplicity
+    final Map<String, dynamic> dataToSave = Map<String, dynamic>.from(_levelProgress);
+    dataToSave['isIndonesian_setting'] = _isIndonesian;
+
+    final progressString = jsonEncode(dataToSave);
     await prefs.setString('level_progress_v3', progressString);
   }
 }

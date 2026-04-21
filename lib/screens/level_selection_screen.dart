@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../widgets/game_components.dart';
+import '../services/sound_service.dart';
 import 'shadow_matching_screen.dart';
 import 'spelling_tapping_screen.dart';
 import 'listen_pick_screen.dart';
@@ -47,55 +48,135 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     }
   }
 
-  String _getGameNameForLevel(int level) {
+  String _getGameNameForLevel(int level, bool isIndo) {
     int mod = level % 4;
     switch (mod) {
-      case 1: return 'Counting';
-      case 2: return 'Shadows';
-      case 3: return 'Listen';
+      case 1: return isIndo ? 'Hitung' : 'Counting';
+      case 2: return isIndo ? 'Bayangan' : 'Shadows';
+      case 3: return isIndo ? 'Dengar' : 'Listen';
       case 0:
-      default: return 'Spelling';
+      default: return isIndo ? 'Eja' : 'Spelling';
     }
+  }
+
+  void _showCongratulationDialog(BuildContext context) {
+    SoundService().playGameComplete();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StarShowerOverlay(
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFF176), Color(0xFFFFB74D)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white, width: 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 10),
+                  )
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Trophy or Star Image
+                  const Icon(Icons.emoji_events, size: 100, color: Colors.amber),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'YAY!!',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.deepOrange,
+                      shadows: [Shadow(color: Colors.black26, offset: Offset(2, 2), blurRadius: 4)],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Selamat!\nKamu berhasil menyelesaikan permainan ini!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.brown,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      elevation: 5,
+                    ),
+                    child: const Text(
+                      'KEMBALI',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<GameProvider>();
-    final category = provider.selectedCategory;
+    return Consumer<GameProvider>(
+      builder: (context, provider, child) {
+        final isIndo = provider.isIndonesian;
+        final category = provider.selectedCategory;
 
-    if (category == null) {
-      return const Scaffold(body: Center(child: Text('Error: Missing category')));
-    }
+        if (category == null) {
+          return Scaffold(body: Center(child: Text(isIndo ? 'Error: Kategori hilang' : 'Error: Missing category')));
+        }
 
-    final int totalLevels = 4;
-    final double levelHeight = 160.0;
-    final double totalHeight = totalLevels * levelHeight + 200.0; // Extra padding
-    final double screenWidth = MediaQuery.of(context).size.width;
+        final int totalLevels = 4;
+        final double levelHeight = 160.0;
+        final double totalHeight = totalLevels * levelHeight + 200.0; // Extra padding
+        final double screenWidth = MediaQuery.of(context).size.width;
 
-    // Generate node positions (Bottom to Top)
-    List<Offset> nodePositions = [];
-    for (int i = 0; i < totalLevels; i++) {
-        // i=0 is Level 1. It should be at the bottom.
-        double y = totalHeight - 150.0 - (i * levelHeight);
-        // Alternate left and right with sine wave
-        double x = screenWidth / 2 + sin(i * 1.5) * (screenWidth * 0.25);
-        nodePositions.add(Offset(x, y));
-    }
+        // Generate node positions (Bottom to Top)
+        List<Offset> nodePositions = [];
+        for (int i = 0; i < totalLevels; i++) {
+            // i=0 is Level 1. It should be at the bottom.
+            double y = totalHeight - 150.0 - (i * levelHeight);
+            // Alternate left and right with sine wave
+            double x = screenWidth / 2 + sin(i * 1.5) * (screenWidth * 0.25);
+            nodePositions.add(Offset(x, y));
+        }
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text(
-          'Level Map',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            fontSize: 28,
-            shadows: [Shadow(color: Colors.black45, offset: Offset(2, 2), blurRadius: 4)],
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
+        return Scaffold(
+          extendBodyBehindAppBar: true,
+          appBar: AppBar(
+            title: Text(
+              isIndo ? 'Peta Permainan' : 'Level Map',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 28,
+                shadows: [Shadow(color: Colors.black45, offset: Offset(2, 2), blurRadius: 4)],
+              ),
+            ),
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 28),
@@ -147,7 +228,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                       isCompleted, 
                       iconAsset, 
                       provider, 
-                      category.name
+                      category.name,
+                      totalLevels,
+                      isIndo
                     ),
                   );
                 }),
@@ -156,6 +239,8 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 
@@ -166,7 +251,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     bool isCompleted, 
     String iconAsset,
     GameProvider provider,
-    String categoryName
+    String categoryName,
+    int totalLevels,
+    bool isIndo
   ) {
     // Colors based on level type
     final isBlue = level % 2 != 0;
@@ -186,6 +273,14 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
               ).then((_) {
                  // Refresh state when coming back
                  setState((){});
+                 
+                 // Detect if they just completed the final level
+                 final isNowCompleted = provider.getHighestLevelCompleted(categoryName) >= level;
+                 if (level == totalLevels && isNowCompleted && !isCompleted) {
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      _showCongratulationDialog(context);
+                    });
+                 }
               });
             }
           : null,
@@ -276,7 +371,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                       ),
                     ),
                     Text(
-                      _getGameNameForLevel(level),
+                      _getGameNameForLevel(level, isIndo),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
@@ -348,25 +443,118 @@ class PathPainter extends CustomPainter {
     for (int i = 0; i < positions.length - 1; i++) {
        Offset p0 = positions[i];
        Offset p1 = positions[i + 1];
-       // Create a control point for a quadratic curve
-       // For a snake path, we can put the control point further out in X
        double midX = (p0.dx + p1.dx) / 2;
-       // Add some bulging to make it snake properly:
        double ctrlX = (p0.dx < p1.dx) ? p0.dx - 60 : p0.dx + 60;
-       if(i == 0) ctrlX = p1.dx; // smooth start
+       if(i == 0) ctrlX = p1.dx; 
        double ctrlY = (p0.dy + p1.dy) / 2;
        path.quadraticBezierTo(ctrlX, ctrlY, p1.dx, p1.dy);
     }
 
     canvas.drawPath(path, borderPaint);
     canvas.drawPath(path, pathPaint);
-    
-    // Optional: Draw simple line segments inside the path to mimic stone pieces?
-    // Using simple PathMetrics can do dashes, but a simple line is fine for now
   }
 
   @override
   bool shouldRepaint(covariant PathPainter oldDelegate) {
-    return true; // Simple repaint
+    return true; 
+  }
+}
+
+class StarShowerOverlay extends StatefulWidget {
+  final Widget child;
+  const StarShowerOverlay({super.key, required this.child});
+
+  @override
+  State<StarShowerOverlay> createState() => _StarShowerOverlayState();
+}
+
+class _StarShowerOverlayState extends State<StarShowerOverlay> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  final Random rand = Random();
+  late List<_StarParticle> _particles;
+
+  @override
+  void initState() {
+    super.initState();
+    // 5 seconds falling animation
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 5));
+    // Generate 80 stars
+    _particles = List.generate(80, (index) => _StarParticle(rand));
+    _controller.addListener(() {
+      setState(() {});
+    });
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        widget.child,
+        IgnorePointer(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                clipBehavior: Clip.none,
+                children: _particles.map((p) {
+                  double progress = _controller.value;
+                  // Drop down
+                  double y = (p.startY * constraints.maxHeight) + (progress * p.speed * constraints.maxHeight * 1.5);
+                  // Wiggle sideways
+                  double x = (p.startX * constraints.maxWidth) + sin(progress * p.wiggleSpeed) * p.wiggleAmount;
+                  
+                  // Fade out towards the very end
+                  double opacity = 1.0;
+                  if (progress > 0.8) {
+                    opacity = (1.0 - progress) * 5.0; // scales 0.2 down to 0
+                  }
+
+                  return Positioned(
+                    top: y,
+                    left: x,
+                    child: Transform.rotate(
+                      angle: progress * p.spinSpeed,
+                      child: Icon(
+                        Icons.star,
+                        color: p.color.withOpacity(opacity.clamp(0.0, 1.0)),
+                        size: p.size,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            }
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StarParticle {
+  late double startX;
+  late double startY;
+  late double speed;
+  late double wiggleSpeed;
+  late double wiggleAmount;
+  late double spinSpeed;
+  late double size;
+  late Color color;
+
+  _StarParticle(Random r) {
+    startX = r.nextDouble(); // 0 to 1 across width
+    startY = r.nextDouble() * -0.5 - 0.2; // Start way above screen
+    speed = r.nextDouble() * 1.5 + 1.0; // Fall speed
+    wiggleSpeed = r.nextDouble() * 15 + 5;
+    wiggleAmount = r.nextDouble() * 80;
+    spinSpeed = r.nextDouble() * 15;
+    size = r.nextDouble() * 25 + 15; // 15 to 40 px
+    color = const [Colors.amber, Colors.yellow, Colors.orange, Colors.white][r.nextInt(4)];
   }
 }

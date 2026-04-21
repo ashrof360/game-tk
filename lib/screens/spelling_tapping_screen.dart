@@ -29,19 +29,25 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
     if (category != null && category.items.isNotEmpty) {
       final item = category.items[currentItemIndex % category.items.length];
       Future.delayed(const Duration(milliseconds: 300), () {
-        SoundService().playQuestion("Let's spell ${item.name}!");
+        final isIndo = context.read<GameProvider>().isIndonesian;
+        SoundService().playQuestion(
+          isIndo ? "Mari mengeja ${item.name}!" : "Let's spell ${item.name}!",
+          isIndo: isIndo
+        );
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<GameProvider>();
-    final category = provider.selectedCategory;
+    return Consumer<GameProvider>(
+      builder: (context, provider, child) {
+        final isIndo = provider.isIndonesian;
+        final category = provider.selectedCategory;
 
-    if (category == null || category.items.isEmpty) {
-      return const Scaffold(body: Center(child: Text('No items')));
-    }
+        if (category == null || category.items.isEmpty) {
+          return Scaffold(body: Center(child: Text(isIndo ? 'Tidak ada buah' : 'No items')));
+        }
 
     final item = category.items[currentItemIndex % category.items.length];
     final word = item.name.toUpperCase();
@@ -78,9 +84,9 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 30),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Center(
-                      child: WoodenSign(title: 'Spelling & Tapping'),
+                      child: WoodenSign(title: isIndo ? 'Mengeja Kata' : 'Spelling & Tapping'),
                     ),
                   ),
                   const SizedBox(width: 48),
@@ -196,7 +202,7 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
                                   currentSpelling += letter;
                                 });
                                 if (currentSpelling == word) {
-                                  SoundService().playCorrect();
+                                  SoundService().playCorrect(isIndo: isIndo);
                                   provider.incrementScore();
                                   Future.delayed(const Duration(seconds: 1), () {
                                     // Level-based rounds
@@ -217,7 +223,7 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
                                 }
                               } else {
                                 // Wrong letter tapped
-                                SoundService().playWrong();
+                                SoundService().playWrong(isIndo: isIndo);
                               }
                             }
                           },
@@ -232,6 +238,8 @@ class _SpellingTappingScreenState extends State<SpellingTappingScreen> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 }

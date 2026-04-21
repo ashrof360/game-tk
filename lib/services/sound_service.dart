@@ -35,25 +35,36 @@ class SoundService {
   }
 
   /// Plays a general TTS question or phrase
-  Future<void> playQuestion(String text) async {
+  Future<void> playQuestion(String text, {bool isIndo = false}) async {
     await _tts.stop();
-    await _tts.setLanguage("en-US");
+    await _tts.setLanguage(isIndo ? "id-ID" : "en-US");
     await _tts.setPitch(1.85); // Dinaikkan mendekati titik melengking khas anak kecil
     await _tts.setSpeechRate(0.45);
     await _tts.speak(text);
   }
 
-  /// Synthesizes an extra high-pitch cheerful "Correct!"
-  Future<void> playCorrect() async {
+  /// Synthesizes an extra high-pitch cheerful "Correct!" or "Benar!"
+  Future<void> playCorrect({bool isIndo = false}) async {
     await _tts.stop();
-    await _tts.setLanguage("en-US");
+    await _tts.setLanguage(isIndo ? "id-ID" : "en-US");
     await _tts.setPitch(2.0); // Maximum pitch for cheerful "Ding" response
     await _tts.setSpeechRate(0.5);
-    await _tts.speak("Correct!");
+    await _tts.speak(isIndo ? "Yeyy, Benar!" : "Correct!");
+  }
+
+  /// Synthesizes a long, extremely cheerful "Congratulations!" sentence
+  Future<void> playGameComplete({bool isIndo = false}) async {
+    await _tts.stop();
+    await _tts.setLanguage(isIndo ? "id-ID" : "en-US");
+    await _tts.setPitch(1.9); // High and fun
+    await _tts.setSpeechRate(0.45); // Not too fast so they can hear clearly
+    await _tts.speak(isIndo 
+      ? "Selamat! Kamu berhasil menyelesaikan permainan ini. Kerja bagus!" 
+      : "Congratulations! You have successfully completed this game. Awesome job!");
   }
 
   /// Synthesizes a slightly slower, lower pitch "Try again!" with anti-spam
-  Future<void> playWrong() async {
+  Future<void> playWrong({bool isIndo = false}) async {
     final now = DateTime.now();
     // Anti-spam to prevent overlapping "Try again!" voices if user taps rapidly
     if (now.difference(_lastWrongPlay).inMilliseconds < 1200) return;
@@ -63,10 +74,10 @@ class SoundService {
     // Stop current speaking just in case so it plays immediately
     if (_isTtsPlaying) await _tts.stop(); 
     
-    await _tts.setLanguage("en-US");
+    await _tts.setLanguage(isIndo ? "id-ID" : "en-US");
     await _tts.setPitch(1.6); // Dulu 1.2, dinaikkan agar "Try again" tetap terkesan seperti anak-anak
     await _tts.setSpeechRate(0.45);
-    await _tts.speak("Try again!");
+    await _tts.speak(isIndo ? "Coba lagi!" : "Try again!");
   }
 
   /// Plays a fast, high-pitch "Bop!" sound for UI taps

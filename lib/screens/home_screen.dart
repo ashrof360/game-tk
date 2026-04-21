@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/game_provider.dart';
 import 'main_selection_screen.dart';
 import '../services/sound_service.dart';
 
@@ -7,8 +9,12 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
+    return Consumer<GameProvider>(
+      builder: (context, provider, child) {
+        final isIndo = provider.isIndonesian;
+        
+        return Scaffold(
+          body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
@@ -53,10 +59,10 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      'Start',
-                      style: TextStyle(
+                      isIndo ? 'Mulai' : 'Start',
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
@@ -74,9 +80,45 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
+            
+            // Language Toggle Switch
+            Positioned(
+              top: 50,
+              right: 20,
+              child: GestureDetector(
+                onTap: () {
+                  provider.toggleLanguage();
+                  SoundService().playTap();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.language, color: Colors.white, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        isIndo ? 'IND' : 'ENG',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

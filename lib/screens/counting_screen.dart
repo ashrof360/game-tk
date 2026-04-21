@@ -36,12 +36,18 @@ class _CountingScreenState extends State<CountingScreen> {
     });
 
     final category = provider.selectedCategory;
+    final isIndo = provider.isIndonesian;
+    
     if (category != null && category.items.isNotEmpty) {
       final item = category.items[currentItemIndex % category.items.length];
       final itemLabel = item.name.toLowerCase();
+      final itemLabelId = item.nameId.toLowerCase();
       final itemLabelPlural = itemLabel.endsWith('s') ? itemLabel : '${itemLabel}s';
+      
       Future.delayed(const Duration(milliseconds: 300), () {
-         SoundService().playQuestion('How many $itemLabelPlural?');
+         final textEn = 'How many $itemLabelPlural?';
+         final textId = 'Ada berapa buah $itemLabelId?';
+         SoundService().playQuestion(isIndo ? textId : textEn, isIndo: isIndo);
       });
     }
   }
@@ -50,13 +56,15 @@ class _CountingScreenState extends State<CountingScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final category = provider.selectedCategory;
+    final isIndo = provider.isIndonesian;
 
     if (category == null || category.items.isEmpty) {
-      return const Scaffold(body: Center(child: Text('No items')));
+      return Scaffold(body: Center(child: Text(isIndo ? 'Tidak ada buah' : 'No items')));
     }
 
     final item = category.items[currentItemIndex % category.items.length];
     final itemLabel = item.name.toLowerCase();
+    final itemLabelId = item.nameId.toLowerCase();
     final itemLabelPlural = itemLabel.endsWith('s')
         ? itemLabel
         : '${itemLabel}s';
@@ -93,9 +101,9 @@ class _CountingScreenState extends State<CountingScreen> {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 30),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Center(
-                      child: WoodenSign(title: 'Counting'),
+                      child: WoodenSign(title: isIndo ? 'Berhitung' : 'Counting'),
                     ),
                   ),
                   const SizedBox(width: 48),
@@ -104,7 +112,7 @@ class _CountingScreenState extends State<CountingScreen> {
               const SizedBox(height: 10),
               
               Text(
-                'How many $itemLabelPlural?',
+                isIndo ? 'Ada berapa buah $itemLabelId?' : 'How many $itemLabelPlural?',
                 style: const TextStyle(
                   fontSize: 24, 
                   fontWeight: FontWeight.bold,
@@ -165,10 +173,10 @@ class _CountingScreenState extends State<CountingScreen> {
                       height: 65,
                       child: GameBlock(
                         text: '$num',
-                        baseColor: num % 2 == 0 ? Colors.orange : Colors.blue,
+                        baseColor: Colors.blue,
                         onTap: () {
                           if (num == itemCount) {
-                            SoundService().playCorrect();
+                            SoundService().playCorrect(isIndo: isIndo);
                             provider.incrementScore();
                             Future.delayed(const Duration(seconds: 1), () {
                               // Level-based rounds
@@ -184,7 +192,7 @@ class _CountingScreenState extends State<CountingScreen> {
                               }
                             });
                           } else {
-                            SoundService().playWrong();
+                            SoundService().playWrong(isIndo: isIndo);
                           }
                         },
                       ),
