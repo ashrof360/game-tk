@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 import 'providers/game_provider.dart';
 import 'screens/splash_screen.dart';
 import 'services/sound_service.dart';
+import 'services/database_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await DatabaseService.initDatabase();
   runApp(const MyApp());
 }
 

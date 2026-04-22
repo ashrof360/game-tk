@@ -1,8 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/category.dart';
+import '../services/database_service.dart';
 
 enum GameType { shadowMatching, spellingTapping, listenPick, counting, mixed }
 
@@ -11,11 +9,18 @@ class GameProvider extends ChangeNotifier {
   GameType? _currentGameType;
   int _currentLevel = 1;
   int _currentScore = 0;
-  bool _isIndonesian = true; // default language
-  
-  
-  // category name -> max level completed
+  bool _isIndonesian = true;
   final Map<String, int> _levelProgress = {};
+
+  // Read defaults from Hive directly
+  void _syncFromDatabase() {
+    final profile = DatabaseService.getProfile();
+    _currentScore = profile.globalScore;
+    _isIndonesian = profile.isIndonesian;
+    _levelProgress.clear();
+    _levelProgress.addAll(profile.levelProgress);
+    notifyListeners();
+  }
 
   Category? get selectedCategory => _selectedCategory;
   GameType? get currentGameType => _currentGameType;
@@ -42,6 +47,7 @@ class GameProvider extends ChangeNotifier {
 
   void incrementScore() {
     _currentScore++;
+    DatabaseService.updateScore(1); 
     notifyListeners();
   }
 
@@ -58,7 +64,7 @@ class GameProvider extends ChangeNotifier {
       
       if (_currentLevel > completedLevel) {
         _levelProgress[categoryName] = _currentLevel;
-        _saveProgress();
+        DatabaseService.updateLevel(categoryName, _currentLevel);
       }
       notifyListeners();
     }
@@ -66,7 +72,7 @@ class GameProvider extends ChangeNotifier {
 
   void toggleLanguage() {
     _isIndonesian = !_isIndonesian;
-    _saveProgress(); // Use same prefs persistence function
+    DatabaseService.setLanguage(_isIndonesian);
     notifyListeners();
   }
 
@@ -81,32 +87,6 @@ class GameProvider extends ChangeNotifier {
   }
 
   Future<void> loadProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    final progressString = prefs.getString('level_progress_v3') ?? '{}';
-    try {
-      final progressJson = jsonDecode(progressString) as Map<String, dynamic>;
-      _levelProgress.clear();
-      progressJson.forEach((catKey, levelVal) {
-        if (catKey == 'isIndonesian_setting') {
-           _isIndonesian = levelVal as bool;
-        } else {
-           _levelProgress[catKey] = levelVal as int;
-        }
-      });
-    } catch (e) {
-      debugPrint('Error loading progress: $e');
-    }
-    notifyListeners();
-  }
-
-  Future<void> _saveProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    
-    // Create a copy of map to append settings since we are serializing everything together for simplicity
-    final Map<String, dynamic> dataToSave = Map<String, dynamic>.from(_levelProgress);
-    dataToSave['isIndonesian_setting'] = _isIndonesian;
-
-    final progressString = jsonEncode(dataToSave);
-    await prefs.setString('level_progress_v3', progressString);
+    _syncFromDatabase();
   }
 }
