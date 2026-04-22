@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../models/category.dart';
 import '../widgets/game_components.dart';
+import '../widgets/interactive_feedback.dart';
 import '../services/sound_service.dart';
 
 class ShadowMatchingScreen extends StatefulWidget {
@@ -66,11 +67,12 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
 
   void _onCorrectMatch(bool isIndo) {
     final provider = context.read<GameProvider>();
-    provider.incrementScore();
     setState(() {
       isCorrect = true;
     });
-    Future.delayed(const Duration(seconds: 1), () {
+    SoundService().playCorrect(isIndo: isIndo);
+    InteractiveFeedback.showSuccess(context, onComplete: () {
+      provider.incrementScore();
       final category = provider.selectedCategory!;
       // Level-based rounds
       int totalRounds = 2 + (provider.currentLevel ~/ 2);
@@ -205,6 +207,7 @@ class _ShadowMatchingScreenState extends State<ShadowMatchingScreen> {
                   ),
                   onDraggableCanceled: (velocity, offset) {
                      SoundService().playWrong(isIndo: isIndo);
+                     InteractiveFeedback.showFail(context, onComplete: () {});
                   },
                   child: Container(
                     padding: const EdgeInsets.all(10),

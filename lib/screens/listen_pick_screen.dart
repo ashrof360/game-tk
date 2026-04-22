@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../widgets/interactive_feedback.dart';
 import '../providers/game_provider.dart';
 import '../widgets/game_components.dart';
 import '../services/sound_service.dart';
@@ -143,8 +144,8 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                       onTap: () {
                         if (item == correctItem) {
                           SoundService().playCorrect(isIndo: isIndo);
-                          provider.incrementScore();
-                          Future.delayed(const Duration(seconds: 1), () {
+                          InteractiveFeedback.showSuccess(context, onComplete: () {
+                            provider.incrementScore();
                             // Level-based rounds
                             int totalRounds = 2 + (provider.currentLevel ~/ 2);
                             if (totalRounds > category.items.length) totalRounds = category.items.length;
@@ -161,6 +162,7 @@ class _ListenPickScreenState extends State<ListenPickScreen> {
                           });
                         } else {
                           SoundService().playWrong(isIndo: isIndo);
+                          InteractiveFeedback.showFail(context, onComplete: () {});
                         }
                       },
                       child: Container(

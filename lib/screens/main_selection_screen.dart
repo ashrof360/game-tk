@@ -28,40 +28,49 @@ class MainSelectionScreen extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              // Header Wooden Banner
+              // Header Colorful Banner
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF8D6E63), Color(0xFF5D4037)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFA770EF), Color(0xFFCF8BF3), Color(0xFFFDB99B)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(color: const Color(0xFF3E2723), width: 4),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: Colors.white, width: 4),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.purple.withOpacity(0.4),
                       offset: const Offset(0, 6),
-                      blurRadius: 10,
+                      blurRadius: 12,
                     ),
                   ],
                 ),
-                child: Text(
-                  isIndo ? 'Pilih Mode' : 'Choose Mode',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 32,
-                    letterSpacing: 1.5,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black45,
-                        offset: Offset(2, 2),
-                        blurRadius: 4,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.stars_rounded, color: Colors.yellowAccent, size: 36),
+                    const SizedBox(width: 15),
+                    Text(
+                      isIndo ? 'Pilih Mode' : 'Choose Mode',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 32,
+                        letterSpacing: 1.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black38,
+                            offset: Offset(2, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 15),
+                    const Icon(Icons.stars_rounded, color: Colors.yellowAccent, size: 36),
+                  ],
                 ),
               ),
               const Spacer(),
@@ -75,8 +84,8 @@ class MainSelectionScreen extends StatelessWidget {
                       title: isIndo ? 'Belajar' : 'Learn',
                       subtitle: isIndo ? 'Belajar Bahasa Inggris' : 'Learn English',
                       iconAsset: 'assets/images/learn_icon.png',
-                      color1: const Color(0xFFFFB74D),
-                      color2: const Color(0xFFF57C00),
+                      color1: const Color(0xFFFF5F6D), // Vibrant Red-Pink
+                      color2: const Color(0xFFFFC371), // Vibrant Yellow-Orange
                       onTap: () {
                         SoundService().playBGM('audio/sonican-joy-for-children-254840.mp3');
                         Navigator.push(
@@ -95,8 +104,8 @@ class MainSelectionScreen extends StatelessWidget {
                       title: isIndo ? 'Bermain' : 'Play',
                       subtitle: isIndo ? 'Main Game Seru' : 'Play Fun Games',
                       iconAsset: 'assets/images/play_icon.png',
-                      color1: const Color(0xFF64B5F6),
-                      color2: const Color(0xFF1976D2),
+                      color1: const Color(0xFF00C6FF), // Bright Cyan
+                      color2: const Color(0xFF0072FF), // Vivid Blue
                       onTap: () {
                         SoundService().playBGM('audio/sonican-joy-for-children-254840.mp3');
                         Navigator.push(
@@ -174,10 +183,13 @@ class MainSelectionScreen extends StatelessWidget {
           children: [
             const SizedBox(width: 25),
             Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Colors.white,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(2, 2)),
+                ],
               ),
               child: Image.asset(
                 iconAsset,

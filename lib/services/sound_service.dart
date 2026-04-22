@@ -45,6 +45,11 @@ class SoundService {
 
   /// Synthesizes an extra high-pitch cheerful "Correct!" or "Benar!"
   Future<void> playCorrect({bool isIndo = false}) async {
+    try {
+      // Anda bisa menambahkan file 'assets/audio/cheer.mp3' kapan saja di masa depan.
+      await _sfxPlayer.play(AssetSource('audio/cheer.mp3'));
+    } catch (_) {}
+
     await _tts.stop();
     await _tts.setLanguage(isIndo ? "id-ID" : "en-US");
     await _tts.setPitch(2.0); // Maximum pitch for cheerful "Ding" response
@@ -71,6 +76,11 @@ class SoundService {
     
     _lastWrongPlay = now;
     
+    try {
+      // Anda bisa menambahkan file 'assets/audio/boing.mp3' di masa depan
+      await _sfxPlayer.play(AssetSource('audio/boing.mp3'));
+    } catch (_) {}
+
     // Stop current speaking just in case so it plays immediately
     if (_isTtsPlaying) await _tts.stop(); 
     
