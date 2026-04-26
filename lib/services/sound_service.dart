@@ -46,15 +46,11 @@ class SoundService {
   /// Synthesizes an extra high-pitch cheerful "Correct!" or "Benar!"
   Future<void> playCorrect({bool isIndo = false}) async {
     try {
-      // Anda bisa menambahkan file 'assets/audio/cheer.mp3' kapan saja di masa depan.
-      await _sfxPlayer.play(AssetSource('audio/cheer.mp3'));
+      await _sfxPlayer.play(AssetSource('audio/sound_bagus.mp3'));
     } catch (_) {}
 
+    // TTS dihapus sesuai permintaan agar hanya memainkan suara rekaman OGG
     await _tts.stop();
-    await _tts.setLanguage(isIndo ? "id-ID" : "en-US");
-    await _tts.setPitch(2.0); // Maximum pitch for cheerful "Ding" response
-    await _tts.setSpeechRate(0.5);
-    await _tts.speak(isIndo ? "Yeyy, Benar!" : "Correct!");
   }
 
   /// Synthesizes a long, extremely cheerful "Congratulations!" sentence
@@ -77,17 +73,11 @@ class SoundService {
     _lastWrongPlay = now;
     
     try {
-      // Anda bisa menambahkan file 'assets/audio/boing.mp3' di masa depan
-      await _sfxPlayer.play(AssetSource('audio/boing.mp3'));
+      await _sfxPlayer.play(AssetSource('audio/wrong_answer.mp3'));
     } catch (_) {}
 
-    // Stop current speaking just in case so it plays immediately
+    // Menghentikan TTS sesuai instruksi agar suara OGG tidak tabrakan dengan "Coba Lagi"
     if (_isTtsPlaying) await _tts.stop(); 
-    
-    await _tts.setLanguage(isIndo ? "id-ID" : "en-US");
-    await _tts.setPitch(1.6); // Dulu 1.2, dinaikkan agar "Try again" tetap terkesan seperti anak-anak
-    await _tts.setSpeechRate(0.45);
-    await _tts.speak(isIndo ? "Coba lagi!" : "Try again!");
   }
 
   /// Plays a fast, high-pitch "Bop!" sound for UI taps

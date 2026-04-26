@@ -73,6 +73,7 @@ class CategorySelectionScreen extends StatelessWidget {
                 onTap: () {
                     SoundService().stopBGM();
                     context.read<GameProvider>().selectCategory(category);
+                    SoundService().playBGM('audio/the_mountain-kids-513158.mp3');
                     Navigator.push(
                       context,
                       MaterialPageRoute(
